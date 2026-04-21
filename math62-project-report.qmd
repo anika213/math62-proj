@@ -1,26 +1,47 @@
 ---
-title: "math62-project-report"
-format: pdf
-editor: visual
+title: "CDC BRFSS Analysis: Veteran Health"
+
+author: "Math 62 - Spring 2026"
+format:
+  pdf:
+    knitr:
+      opts_chunk: 
+        out-width: "60%"
+        fig-align: "center"
+        size: "scriptsize"
+    fontsize: 10pt
+    toc: false
+    toc-params: "allowframebreaks"
+    include-in-header:
+      - text: |
+          \usepackage{etoolbox}
+          \usepackage{hyperref}
+          
+execute:
+  echo: false
+  warning: false
+  message: false
+  eval: true
+
+fig-align: center
+fig-height: 6
+fig-width: 8
+
 ---
 
-## Quarto
+# Team Members
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+Li, Elsa
 
-## Running Code
+Louie, Amanda
 
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+Sharma, Anika
 
-```{r}
-1 + 1
-```
-
-You can add options to executable code like this
+---
 
 ```{r}
-#| echo: false
+#| echo: true
 2 * 2
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+The `echo: true` option enables the printing of code (only output is displayed).
