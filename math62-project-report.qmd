@@ -48,6 +48,157 @@ The `echo: true` option enables the printing of code (only output is displayed).
 
 Amanda Section 
 
+```{r}
+#| echo: false
+library(dplyr)
+brfss = read.csv("brfss2022_m62.csv", stringsAsFactors=TRUE)
+veteran <- subset(brfss, veteran == "Yes")
+nrow(veteran)
+nonVeteran <- subset(brfss, veteran == "No")
+nrow(nonVeteran)
+```
+
+Comparisons of physical health between veterans and non-veterans:
+
+Arthritis: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranArthClean <- veteran %>% filter(!is.na(arthritis))
+nonVeteranArthClean <- nonVeteran %>% filter(!is.na(arthritis))
+
+arthritisVeterans <- sum(veteranArthClean$arthritis == "Yes")
+arthritisNonVeterans <- sum(nonVeteranArthClean$arthritis == "Yes")
+
+successes <- c(arthritisVeterans, arthritisNonVeterans)
+n_obs <- c(nrow(veteranArthClean), nrow(nonVeteranArthClean))
+
+arthritis_prop_test <- prop.test(successes, n_obs)
+arthritis_prop_test
+```
+
+Heart Disease: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranHDClean <- veteran %>% filter(!is.na(heartdisease))
+nonVeteranHDClean <- nonVeteran %>% filter(!is.na(heartdisease))
+
+hdVeterans <- sum(veteranHDClean$heartdisease == "Yes")
+hdNonVeterans <- sum(nonVeteranHDClean$heartdisease == "Yes")
+
+successes <- c(hdVeterans, hdNonVeterans)
+n_obs <- c(nrow(veteranHDClean), nrow(nonVeteranHDClean))
+
+hd_prop_test <- prop.test(successes, n_obs)
+hd_prop_test
+```
+
+Cancer: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranCancerClean <- veteran %>% filter(!is.na(cancer))
+nonVeteranCancerClean <- nonVeteran %>% filter(!is.na(cancer))
+
+cancerVeterans <- sum(veteranCancerClean$cancer == "Yes")
+cancerNonVeterans <- sum(nonVeteranCancerClean$cancer == "Yes")
+
+successes <- c(cancerVeterans, cancerNonVeterans)
+n_obs <- c(nrow(veteranCancerClean), nrow(nonVeteranCancerClean))
+
+cancer_prop_test <- prop.test(successes, n_obs)
+cancer_prop_test
+```
+
+Diabetes: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranDiabetesClean <- veteran %>% filter(!is.na(diabetes))
+nonVeteranDiabetesClean <- nonVeteran %>% filter(!is.na(diabetes))
+
+diabetesVeterans <- sum(veteranDiabetesClean$diabetes == "Yes")
+diabetesNonVeterans <- sum(nonVeteranDiabetesClean$diabetes == "Yes")
+
+successes <- c(diabetesVeterans, diabetesNonVeterans)
+n_obs <- c(nrow(veteranDiabetesClean), nrow(nonVeteranDiabetesClean))
+
+diabetes_prop_test <- prop.test(successes, n_obs)
+diabetes_prop_test
+```
+
+COPD: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranCOPDClean <- veteran %>% filter(!is.na(copd))
+nonVeteranCOPDClean <- nonVeteran %>% filter(!is.na(copd))
+
+copdVeterans <- sum(veteranCOPDClean$copd == "Yes")
+copdNonVeterans <- sum(nonVeteranCOPDClean$copd == "Yes")
+
+successes <- c(copdVeterans, copdNonVeterans)
+n_obs <- c(nrow(veteranCOPDClean), nrow(nonVeteranCOPDClean))
+
+copd_prop_test <- prop.test(successes, n_obs)
+copd_prop_test
+```
+
+daysphyshlthnotgood: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranDaysphyshlthnotgoodClean <- veteran %>% filter(!is.na(daysphyshlthnotgood))
+nonVeteranDaysphyshlthnotgoodClean <- nonVeteran %>% filter(!is.na(daysphyshlthnotgood))
+
+daysphyshlthnotgoodVeterans <- mean(veteranDaysphyshlthnotgoodClean$daysphyshlthnotgood)
+daysphyshlthnotgoodNonVeterans <- mean(nonVeteranDaysphyshlthnotgoodClean$daysphyshlthnotgood)
+
+daysphyshlthnotgood_t_test <- t.test(veteranDaysphyshlthnotgoodClean$daysphyshlthnotgood,
+                                     nonVeteranDaysphyshlthnotgoodClean$daysphyshlthnotgood,
+                                     alternative="two.sided",
+                                     mu=0, paired=FALSE, var.equal = FALSE,
+                                     conf.level=0.95)
+daysphyshlthnotgood_t_test
+```
+
+Comparisons of mental health between veterans and non-veterans:
+
+Depression: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranDepressClean <- veteran %>% filter(!is.na(depress))
+nonVeteranDepressClean <- nonVeteran %>% filter(!is.na(depress))
+
+depressVeterans <- sum(veteranDepressClean$depress == "Yes")
+depressNonVeterans <- sum(nonVeteranDepressClean$depress == "Yes")
+
+successes <- c(depressVeterans, depressNonVeterans)
+n_obs <- c(nrow(veteranDepressClean), nrow(nonVeteranDepressClean))
+
+depress_prop_test <- prop.test(successes, n_obs)
+depress_prop_test
+```
+
+daysmenthlthnotgood: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranDaysmenthlthnotgoodClean <- veteran %>% filter(!is.na(daysmenthlthnotgood))
+nonVeteranDaysmenthlthnotgoodClean <- nonVeteran %>% filter(!is.na(daysmenthlthnotgood))
+
+daysmenthlthnotgoodVeterans <- mean(veteranDaysmenthlthnotgoodClean$daysmenthlthnotgood)
+daysmenthlthnotgoodNonVeterans <- mean(nonVeteranDaysmenthlthnotgoodClean$daysmenthlthnotgood)
+
+daysmenthlthnotgood_t_test <- t.test(veteranDaysmenthlthnotgoodClean$daysmenthlthnotgood,
+                                     nonVeteranDaysmenthlthnotgoodClean$daysmenthlthnotgood,
+                                     alternative="two.sided",
+                                     mu=0, paired=FALSE, var.equal = FALSE,
+                                     conf.level=0.95)
+daysmenthlthnotgood_t_test
+```
 
 Elsa Section
 
