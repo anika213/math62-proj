@@ -1,0 +1,235 @@
+---
+title: "Math 62: Homework 1"
+subtitle: "Due: Thursday, January 29, 2026 at 5:00 pm PST on Gradescope"
+number-sections: false
+include-in-header: 
+   text: |
+     \usepackage{fvextra}
+     \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+     \DefineVerbatimEnvironment{OutputCode}{Verbatim}{breaklines,commandchars=\\\{\}}
+format: pdf
+---
+
+\newcommand{\real}{\mathbb{R}}
+\newcommand{\nimplies}{\centernot\implies}
+\newcommand{\e}{\mathbb{E}}
+\setcounter{section}{-1}
+
+::: {.content-hidden when-format="latex"}
+\DeclareMathOperator*{\argmin}{\arg\!\min}
+\DeclareMathOperator*{\argmax}{\arg\!\max}
+:::
+
+```{r}
+library(dplyr)
+library(tidyverse)
+```
+```{r}
+
+# load in BRFSS dataset:
+
+brfss = read.csv("brfss2022_m62.csv", stringsAsFactors=TRUE)
+
+
+```
+
+
+
+```{r}
+
+# Running Chisq test to compare proportions between veterans and national data (gemini-gen)
+# 1. Clean the data: Filter for Veterans and non-NA race entries
+brfss_veterans <- brfss %>%
+  filter(veteran == "Yes") %>%
+  filter(!is.na(race))
+
+# 2. Count the number of unique entries in the race column for veterans
+vet_race_counts <- table(brfss_veterans$race)
+
+# 3. Expected national probabilities (must sum to 1 and match table order)
+expected_probs <- c(0.007, 0.061, 0.126, 0.191, 0.024, 0.002, 0.589)
+
+# 4. Run the Chi-Squared Goodness of Fit Test
+chisq.test(vet_race_counts, p = expected_probs)
+
+
+```
+```{r} 
+# 1. Reshape the data for plotting
+plot_data <- final_display %>%
+  tidyr::pivot_longer(
+    cols = c(Expected_Count, Observed_Count), 
+    names_to = "Count_Type", 
+    values_to = "Count_Value"
+  )
+
+# 2. Create the Grouped Bar Plot with Log Scale
+ggplot(plot_data, aes(x = Race, y = Count_Value, fill = Count_Type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  # Apply the log transformation
+  # 'labels = scales::comma' makes the numbers easier to read (e.g., 1,000 instead of 1e3)
+#  scale_y_log10(labels = scales::comma) + 
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 15)) +
+  theme_minimal(base_size=14) +
+  labs(
+    title = "Observed vs. Expected Veteran Counts by Race (Log Scale)",
+    x = "Racial Group",
+    y = "Count (Log 10)",
+    fill = "Legend"
+  ) +
+  scale_fill_manual(
+    values = c("Expected_Count" = "#2a79d5", "Observed_Count" = "#29b9d6"),
+    labels = c("Expected", "Observed")
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.minor.y = element_blank() # Clean up log grid lines
+  )
+```
+
+
+```{r}
+# Compare veteran race proportions against national expected proportions
+
+observed_counts <- as.numeric(vet_race_counts)
+race_names <- names(vet_race_counts)
+n_total <- sum(observed_counts)
+
+race_prop_tests <- data.frame(
+  Race = race_names,
+  Observed_Count = observed_counts,
+  Observed_Prop = observed_counts / n_total,
+  Expected_Prop = expected_probs
+) %>%
+  rowwise() %>%
+  mutate(
+    p_value = prop.test(
+      x = Observed_Count,
+      n = n_total,
+      p = Expected_Prop,
+      correct = FALSE
+    )$p.value
+  ) %>%
+  ungroup() %>%
+  mutate(
+    p_adj_bonferroni = p.adjust(p_value, method = "bonferroni"),
+    difference = Observed_Prop - Expected_Prop,
+    abs_difference = abs(difference)
+  ) %>%
+  arrange(p_value)
+
+race_prop_tests
+```
+
+
+```{r}
+race_prop_tests %>%
+  mutate(direction = ifelse(difference > 0, "Overrepresented", "Underrepresented")) %>%
+  select(Race, Observed_Prop, Expected_Prop, direction, p_adj_bonferroni)
+```
+
+
+
+
+
+
+---
+title: "Veteran Demographics Analysis"
+format: html
+---
+
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+
+library(dplyr)
+library(gt)
+
+# 1. Recreating your processed dataframe based on the screenshot
+# (In your actual file, you can just use 'race_prop_tests' from your previous code)
+race_prop_tests <- data.frame(
+  Race = c("Asian only, non-Hispanic", "Hispanic", "White only, non-Hispanic", 
+           "Black only, non-Hispanic", "American Indian or Alaskan Native only, Non-Hispanic",
+           "Native Hawaiian or other Pacific Islander only, Non-Hispanic", "Multiracial, non-Hispanic"),
+  Observed_Prop = c(0.012736694, 0.049953993, 0.813162865, 0.074313526, 0.017119473, 0.006344133, 0.026369316),
+  Expected_Prop = c(0.061, 0.191, 0.589, 0.126, 0.007, 0.002, 0.024),
+  p_adj_bonferroni = c(0, 0, 0, 4.990780e-219, 1.735058e-133, 4.604660e-86, 1.158692e-02)
+) %>%
+  mutate(direction = ifelse(Observed_Prop > Expected_Prop, "Overrepresented", "Underrepresented"))
+
+# 2. Generate the formatted table
+race_prop_tests %>%
+  gt() %>%
+  # Relabel columns to match your desired style
+  cols_label(
+    Race = "Race",
+    Observed_Prop = "Veteran Prop.",
+    Expected_Prop = "National Prop.",
+    direction = "Representation",
+    p_adj_bonferroni = "p-value (adj)"
+  ) %>%
+  # Format proportions as decimals (matching your first screenshot style)
+  fmt_number(
+    columns = c(Observed_Prop, Expected_Prop),
+    decimals = 4
+  ) %>%
+  # Format p-values: small values as < 2.2e-16 or scientific notation
+  fmt_scientific(
+    columns = p_adj_bonferroni,
+    decimals = 2
+  ) %>%
+  # Apply the "Academic/Minimalist" styling (Thin lines top and bottom)
+  tab_options(
+    table.border.top.color = "black",
+    table.border.top.width = px(2),
+    table.border.bottom.color = "black",
+    table.border.bottom.width = px(2),
+    column_labels.border.bottom.color = "black",
+    column_labels.border.bottom.width = px(1),
+    table_body.hlines.style = "none", # Removes horizontal lines between rows
+    data_row.padding = px(4)
+  ) %>%
+  # Align text left and numbers right
+  cols_align(
+    align = "left",
+    columns = Race
+  ) %>%
+  # Handle the extremely small p-values to look like the screenshot
+  text_transform(
+    locations = cells_body(columns = p_adj_bonferroni, rows = p_adj_bonferroni < 2.2e-16),
+    fn = function(x) "< 2.2e-16"
+  )
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
