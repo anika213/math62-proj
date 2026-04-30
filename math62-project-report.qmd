@@ -163,6 +163,90 @@ daysphyshlthnotgood_t_test <- t.test(veteranDaysphyshlthnotgoodClean$daysphyshlt
 daysphyshlthnotgood_t_test
 ```
 
+Check Assumptions (equal variances):
+```{r}
+#| echo: false
+#| 
+hist(veteranDaysphyshlthnotgoodClean$daysphyshlthnotgood,
+     main = "Days Physical Health Not Good (Veteran)",
+     xlab = "Number of days in past month physical health was not good")
+hist(nonVeteranDaysphyshlthnotgoodClean$daysphyshlthnotgood,
+     main = "Days Physical Health Not Good (Non-Veteran)",
+     xlab = "Number of days in past month physical health was not good")
+```
+
+
+```{r}
+#| echo: false
+# Summary of physical health tests
+
+factors <- c("Arthritis", "Heart Disease", "Cancer", "Diabetes", "COPD", "Days Physical Health Not Good")
+prop_vet <- c(0.4356422, 0.1244373, 0.1789827, 0.1962027, 0.11969946, 4.972634)
+prop_nonVet <- c(0.3455287, 0.0543102, 0.1105903, 0.1340290, 0.07724301, 4.338173)
+p_values <- rep("< 2.2e-16", 6)
+
+physical_tests <- data.frame(
+  Factors = factors,
+  Veteran = prop_vet,
+  NonVeteran = prop_nonVet,
+  pvalue = p_values
+)
+
+physical_tests
+```
+
+```{r}
+#| echo: false
+# generated with help from gemini
+
+# Your vectors
+labels_a <- c("Arthritis", "Heart Disease", "Cancer", "Diabetes", "COPD")
+prop_vet <- c(0.4356422, 0.1244373, 0.1789827, 0.1962027, 0.11969946)
+prop_nonVet <- c(0.3455287, 0.0543102, 0.1105903, 0.1340290, 0.07724301)
+
+# Combine into a matrix
+data_matrix_a <- rbind(prop_vet, prop_nonVet)
+
+# Assign column names to the matrix
+colnames(data_matrix_a) <- labels_a
+
+# Your vectors
+labels_b <- c("daysphyshlthnotgood")
+mean_vet <- c(4.972634)
+mean_nonVet <- c(4.338173)
+
+# Combine into a matrix
+data_matrix_b <- rbind(mean_vet, mean_nonVet)
+
+# Assign column names to the matrix
+colnames(data_matrix_b) <- labels_b
+
+# Create the grouped barplot
+# Adjust margins so the long label fits (bottom, left, top, right)
+par(mar = c(12, 4, 4, 2) + 0.1)
+par(mfrow=c(1,2))
+
+barplot(data_matrix_a, 
+        beside = TRUE,                   # This places the bars side-by-side
+        col = c("skyblue", "salmon"),    # Colors for the two groups
+        legend.text = c("Veteran", "Non-Veteran"),
+        args.legend = list(x = "topright", bty = "n"),
+        main = "Health Indicators: ",
+        ylab = "Value",
+        las = 1,                         # Rotates x-axis labels to be vertical
+        cex.names = 0.8)                 # Shrinks the label text slightly
+
+barplot(data_matrix_b, 
+        beside = TRUE,                   # This places the bars side-by-side
+        col = c("skyblue", "salmon"),    # Colors for the two groups
+        legend.text = c("Veteran", "Non-Veteran"),
+        args.legend = list(x = "topright", bty = "n"),
+        main = "Veterans vs Non-Veterans",
+        ylab = "Value",
+        las = 1,                         # Rotates x-axis labels to be vertical
+        cex.names = 0.8)                 # Shrinks the label text slightly
+```
+
 Comparisons of mental health between veterans and non-veterans:
 
 Depression: p-value $< 2.2 \times 10^{-16}$
@@ -195,10 +279,234 @@ daysmenthlthnotgoodNonVeterans <- mean(nonVeteranDaysmenthlthnotgoodClean$daysme
 daysmenthlthnotgood_t_test <- t.test(veteranDaysmenthlthnotgoodClean$daysmenthlthnotgood,
                                      nonVeteranDaysmenthlthnotgoodClean$daysmenthlthnotgood,
                                      alternative="two.sided",
-                                     mu=0, paired=FALSE, var.equal = FALSE,
+                                     mu=0, paired=FALSE, var.equal = TRUE,
                                      conf.level=0.95)
 daysmenthlthnotgood_t_test
 ```
+
+Check Assumptions (equal variances):
+```{r}
+#| echo: false
+#| 
+hist(veteranDaysmenthlthnotgoodClean$daysmenthlthnotgood,
+     main = "Days Mental Health Not Good (Veteran)",
+     xlab = "Number of days in past month mental health was not good")
+hist(nonVeteranDaysmenthlthnotgoodClean$daysmenthlthnotgood,
+     main = "Days Mental Health Not Good (Non-Veteran)",
+     xlab = "Number of days in past month mental health was not good")
+```
+
+```{r}
+#| echo: false
+# Summary of Mental Health Tests
+
+factors <- c("Depression", "Days Physical Health Not Good")
+prop_vet <- c(0.1757344, 3.517690)
+prop_nonVet <- c(0.2166535, 4.462462)
+p_values <- rep("< 2.2e-16", 2)
+
+mental_tests <- data.frame(
+  Factors = factors,
+  Veteran = prop_vet,
+  NonVeteran = prop_nonVet,
+  pvalue = p_values
+)
+
+mental_tests
+```
+
+```{r}
+#| echo: false
+# generated with help from gemini
+
+# Your vectors
+labels_a <- c("Depression")
+prop_vet <- c(0.1757344)
+prop_nonVet <- c(0.2166535)
+
+# Combine into a matrix
+data_matrix_a <- rbind(prop_vet, prop_nonVet)
+
+# Assign column names to the matrix
+colnames(data_matrix_a) <- labels_a
+
+# Your vectors
+labels_b <- c("daysmenthlthnotgood")
+mean_vet <- c(3.517690)
+mean_nonVet <- c(4.462462)
+
+# Combine into a matrix
+data_matrix_b <- rbind(mean_vet, mean_nonVet)
+
+# Assign column names to the matrix
+colnames(data_matrix_b) <- labels_b
+
+# Create the grouped barplot
+# Adjust margins so the long label fits (bottom, left, top, right)
+par(mar = c(12, 4, 4, 2) + 0.1)
+par(mfrow=c(1,2))
+
+barplot(data_matrix_a, 
+        beside = TRUE,                   # This places the bars side-by-side
+        col = c("skyblue", "salmon"),    # Colors for the two groups
+        legend.text = c("Veteran", "Non-Veteran"),
+        args.legend = list(x = "topright", bty = "n"),
+        main = "Health Indicators: ",
+        ylab = "Value",
+        las = 1,                         # Rotates x-axis labels to be vertical
+        cex.names = 0.8)                 # Shrinks the label text slightly
+
+barplot(data_matrix_b, 
+        beside = TRUE,                   # This places the bars side-by-side
+        col = c("skyblue", "salmon"),    # Colors for the two groups
+        legend.text = c("Veteran", "Non-Veteran"),
+        args.legend = list(x = "topright", bty = "n"),
+        main = "Veterans vs Non-Veterans",
+        ylab = "Value",
+        las = 1,                         # Rotates x-axis labels to be vertical
+        cex.names = 0.8)                 # Shrinks the label text slightly
+```
+
+What is the difference in the probability of having a specific health factor being a veteran vs. non-veteran?
+
+```{r}
+#| echo: false
+
+arthritisClean <- brfss %>% filter(!is.na(arthritis))
+
+arthritisClean$veteran <- as.factor(arthritisClean$veteran)
+
+arthritisClean$arthritis <- as.factor(arthritisClean$arthritis)
+
+arthritisMod <- glm(formula = arthritis ~ veteran, data = arthritisClean, family = "binomial")
+
+summary(arthritisMod)
+```
+
+```{r}
+p_vet_arthritis <- plogis(-0.63875 + 0.37988 * 1)
+p_nonVet_arthritis <- plogis(-0.63875 + 0.37988 * 0)
+
+cat("P(Arthritis | Veteran) = ", p_vet_arthritis)
+cat('\n')
+cat("P(Arthritis | Non-Veteran) = ", p_nonVet_arthritis)
+```
+
+```{r}
+#| echo: false
+
+hdClean <- brfss %>% filter(!is.na(heartdisease))
+
+hdClean$veteran <- as.factor(hdClean$veteran)
+
+hdClean$heartdisease <- as.factor(hdClean$heartdisease)
+
+hdMod <- glm(formula = heartdisease ~ veteran, data = hdClean, family = "binomial")
+
+summary(hdMod)
+```
+
+```{r}
+p_vet_hd <- plogis(-2.857202 + 0.906138 * 1)
+p_nonVet_hd <- plogis(-2.857202 + 0.906138 * 0)
+
+cat("P(Heart Disease | Veteran) = ", p_vet_hd)
+cat('\n')
+cat("P(Heart Disease | Non-Veteran) = ", p_nonVet_hd)
+```
+
+```{r}
+#| echo: false
+
+cancerClean <- brfss %>% filter(!is.na(cancer))
+
+cancerClean$veteran <- as.factor(cancerClean$veteran)
+
+cancerClean$cancer <- as.factor(cancerClean$cancer)
+
+cancerMod <- glm(formula = cancer ~ veteran, data = cancerClean, family = "binomial")
+
+summary(cancerMod)
+```
+
+```{r}
+p_vet_cancer <- plogis(-2.084725 + 0.56147 * 1)
+p_nonVet_cancer <- plogis(-2.084725 + 0.56147 * 0)
+
+cat("P(Cancer | Veteran) = ", p_vet_cancer)
+cat('\n')
+cat("P(Cancer | Non-Veteran) = ", p_nonVet_cancer)
+```
+
+```{r}
+#| echo: false
+
+diabetesClean <- brfss %>% filter(!is.na(diabetes))
+
+diabetesClean$veteran <- as.factor(diabetesClean$veteran)
+
+diabetesClean$diabetes <- as.factor(diabetesClean$diabetes)
+
+diabetesMod <- glm(formula = diabetes ~ veteran, data = diabetesClean, family = "binomial")
+
+summary(diabetesMod)
+```
+
+```{r}
+p_vet_diabetes <- plogis(-1.602633 + 0.370480 * 1)
+p_nonVet_diabetes <- plogis(-1.602633 + 0.370480 * 0)
+
+cat("P(Diabetes | Veteran) = ", p_vet_diabetes)
+cat('\n')
+cat("P(Diabetes | Non-Veteran) = ", p_nonVet_diabetes)
+```
+
+```{r}
+#| echo: false
+
+copdClean <- brfss %>% filter(!is.na(copd))
+
+copdClean$veteran <- as.factor(copdClean$veteran)
+
+copdClean$diabetes <- as.factor(copdClean$copd)
+
+copdMod <- glm(formula = copd ~ veteran, data = copdClean, family = "binomial")
+
+summary(copdMod)
+```
+
+```{r}
+p_vet_copd <- plogis(-2.480409 + 0.485130 * 1)
+p_nonVet_copd <- plogis(-2.480409 + 0.485130 * 0)
+
+cat("P(COPD | Veteran) = ", p_vet_copd)
+cat('\n')
+cat("P(COPD | Non-Veteran) = ", p_nonVet_copd)
+```
+
+```{r}
+#| echo: false
+
+depressClean <- brfss %>% filter(!is.na(depress))
+
+depressClean$veteran <- as.factor(depressClean$veteran)
+
+depressClean$depress <- as.factor(depressClean$depress)
+
+depressMod <- glm(formula = depress ~ veteran, data = depressClean, family = "binomial")
+
+summary(depressMod)
+```
+
+```{r}
+p_vet_depress <- plogis(-1.285276 - 0.260243 * 1)
+p_nonVet_depress <- plogis(-1.285276 - 0.260243 * 0)
+
+cat("P(Depressive Disorder Diagnosis | Veteran) = ", p_vet_depress)
+cat('\n')
+cat("P(Depressive Disorder Diagnosis | Non-Veteran) = ", p_nonVet_depress)
+```
+
 
 Elsa Section
 
