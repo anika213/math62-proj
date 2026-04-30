@@ -1,0 +1,1454 @@
+---
+title: "CDC BRFSS Analysis: Veteran Health"
+
+author: "Math 62 - Spring 2026"
+format:
+  pdf:
+    knitr:
+      opts_chunk: 
+        out-width: "60%"
+        fig-align: "center"
+        size: "scriptsize"
+    fontsize: 10pt
+    toc: false
+    toc-params: "allowframebreaks"
+    include-in-header:
+      - text: |
+          \usepackage{etoolbox}
+          \usepackage{hyperref}
+          
+execute:
+  echo: false
+  warning: false
+  message: false
+  eval: true
+
+fig-align: center
+fig-height: 6
+fig-width: 8
+
+---
+
+# Team Members
+
+Li, Elsa
+
+Louie, Amanda
+
+Sharma, Anika
+
+---
+
+```{r}
+#| echo: true
+2 * 2
+```
+
+The `echo: true` option enables the printing of code (only output is displayed).
+
+
+# EDA Section
+
+
+
+```{r}
+#| label: fig-status-dist
+#| fig-cap: "Comparison of sample sizes between Veterans and Non-Veterans."
+
+ggplot(brfss %>% filter(!is.na(veteran)), aes(x = veteran)) +
+  geom_bar(fill = vet_blue, width = 0.6) +
+  geom_text(stat = "count", aes(label = scales::comma(after_stat(count))), 
+            vjust = -0.5, size = 4, fontface = "bold") +
+  labs(title = "Distribution of Veterans vs Non-Veterans",
+       x = "Veteran Status",
+       y = "Total Count") +
+  theme_minimal(base_size = 12) +
+  theme(panel.grid.major.x = element_blank())
+
+```
+
+
+
+```{r}
+#| label: fig-log-reg
+#| fig-height: 7
+#| fig-width: 10
+
+# Prepare data
+model_data <- brfss %>%
+  filter(!is.na(veteran)) %>%
+  mutate(
+    veteran_bin = as.integer(veteran == "Yes"),
+    across(where(is.character), as.factor)
+  ) %>%
+  select(-veteran, -state, -adults) %>% 
+  na.omit()
+
+# Fit model
+log_model <- glm(veteran_bin ~ ., data = model_data, family = binomial)
+
+# Extract and format coefficients
+coef_df <- as.data.frame(summary(log_model)$coefficients) %>%
+  mutate(term = rownames(.)) %>%
+  rename(estimate = Estimate, std_error = `Std. Error`, p_value = `Pr(>|z|)`) %>%
+  filter(term != "(Intercept)") %>%
+  mutate(
+    odds_ratio = exp(estimate),
+    ci_low  = exp(estimate - 1.96 * std_error),
+    ci_high = exp(estimate + 1.96 * std_error),
+    significant = p_value < 0.05
+  ) %>%
+  arrange(desc(abs(estimate))) %>%
+  slice_head(n = 20)
+
+# Plot using the custom color scheme
+ggplot(coef_df, aes(x = odds_ratio, y = reorder(term, odds_ratio), color = significant)) +
+  geom_point(size = 3) +
+  geom_errorbarh(aes(xmin = ci_low, xmax = ci_high), height = 0.3) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "gray40") +
+  scale_color_manual(values = c("FALSE" = "gray70", "TRUE" = vet_blue),
+                     labels = c("Not significant", "p < 0.05")) +
+  labs(
+    title = "Top 20 Predictors of Veteran Status",
+    subtitle = "Odds ratios calculated via logistic regression",
+    x = "Odds Ratio (95% CI)",
+    y = NULL,
+    color = "Significance"
+  ) +
+  theme_minimal()
+```
+
+
+```{r}
+#| label: fig-demographics
+#| fig-height: 10
+#| fig-width: 12
+#| label: fig-vet-gender
+#| fig-cap: "Gender distribution among surveyed veterans."
+
+ggplot(vets, aes(x = sex)) +
+  geom_bar(fill = "#29b9d6", width = 0.5) +
+  geom_text(stat = "count", aes(label = scales::comma(after_stat(count))), 
+            vjust = -0.5, size = 3.5, fontface = "bold") +
+  labs(title = "Veteran Population by Gender", x = NULL, y = "Count") +
+  theme_minimal()
+```
+
+
+
+
+```{r}
+#| label: fig-vet-age
+#| fig-cap: "Age distribution of veterans, showing a heavy skew toward older demographics."
+
+#| label: fig-vet-race
+#| fig-cap: "Racial demographics of veterans within the dataset."
+
+ggplot(vets, aes(y = reorder(race, race, function(x) length(x)))) +
+  geom_bar(fill = "#2a79d5") +
+  geom_text(stat = "count", aes(label = scales::comma(after_stat(count))), 
+            hjust = -0.1, size = 3) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
+  labs(title = "Veteran Population by Race", x = "Count", y = NULL) +
+  theme_minimal()
+
+```
+
+```{r}
+#| label: fig-education-comparison
+#| fig-cap: "Education level distribution by veteran status."
+
+brfss %>%
+  filter(!is.na(veteran), !is.na(education)) %>%
+  count(veteran, education) %>%
+  group_by(veteran) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  ggplot(aes(x = education, y = prop, fill = veteran)) +
+  geom_col(position = "dodge", width = 0.7) +
+  geom_text(
+    aes(label = scales::percent(prop, accuracy = 0.1)),
+    position = position_dodge(width = 0.7),
+    vjust = -0.3,
+    size = 3
+  ) +
+  scale_y_continuous(
+    labels = scales::percent,
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 12)) +
+  scale_fill_manual(values = c("No" = vet_teal, "Yes" = vet_blue)) +
+  labs(
+    title = "Education Distribution by Veteran Status",
+    x = "Education Level",
+    y = "Percent Within Group",
+    fill = "Veteran"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+
+
+
+
+
+```{r}
+#| label: fig-income-comparison
+#| fig-cap: "Income level distribution by veteran status."
+
+brfss %>%
+  filter(!is.na(veteran), !is.na(income)) %>%
+  count(veteran, income) %>%
+  group_by(veteran) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  ggplot(aes(x = income, y = prop, fill = veteran)) +
+  geom_col(position = "dodge", width = 0.7) +
+  geom_text(
+    aes(label = scales::percent(prop, accuracy = 0.1)),
+    position = position_dodge(width = 0.7),
+    vjust = -0.3,
+    size = 3
+  ) +
+  scale_y_continuous(
+    labels = scales::percent,
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 12)) +
+  scale_fill_manual(values = c("No" = vet_teal, "Yes" = vet_blue)) +
+  labs(
+    title = "Income Distribution by Veteran Status",
+    x = "Income Level",
+    y = "Percent Within Group",
+    fill = "Veteran"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+
+
+```{r}
+#| label: fig-age-comparison
+#| fig-cap: "Age distribution by veteran status."
+
+brfss %>%
+  filter(!is.na(veteran), !is.na(age)) %>%
+  count(veteran, age) %>%
+  group_by(veteran) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  ggplot(aes(x = age, y = prop, fill = veteran)) +
+  geom_col(position = "dodge", width = 0.7) +
+  geom_text(
+    aes(label = scales::percent(prop, accuracy = 0.1)),
+    position = position_dodge(width = 0.7),
+    vjust = -0.3,
+    size = 3
+  ) +
+  scale_y_continuous(
+    labels = scales::percent,
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 12)) +
+  scale_fill_manual(values = c("No" = vet_teal, "Yes" = vet_blue)) +
+  labs(
+    title = "Age Distribution by Veteran Status",
+    x = "Age Group",
+    y = "Percent Within Group",
+    fill = "Veteran"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+
+
+# Demographics Section
+
+
+```{r}
+library(dplyr)
+library(tidyverse)
+```
+```{r}
+
+# load in BRFSS dataset:
+
+brfss = read.csv("brfss2022_m62.csv", stringsAsFactors=TRUE)
+
+
+```
+
+
+
+```{r}
+
+# Running Chisq test to compare proportions between veterans and national data (gemini-gen)
+# 1. Clean the data: Filter for Veterans and non-NA race entries
+brfss_veterans <- brfss %>%
+  filter(veteran == "Yes") %>%
+  filter(!is.na(race))
+
+# 2. Count the number of unique entries in the race column for veterans
+vet_race_counts <- table(brfss_veterans$race)
+
+# 3. Expected national probabilities (must sum to 1 and match table order)
+expected_probs <- c(0.007, 0.061, 0.126, 0.191, 0.024, 0.002, 0.589)
+
+# 4. Run the Chi-Squared Goodness of Fit Test
+chisq.test(vet_race_counts, p = expected_probs)
+
+
+```
+```{r} 
+# 1. Reshape the data for plotting
+plot_data <- final_display %>%
+  tidyr::pivot_longer(
+    cols = c(Expected_Count, Observed_Count), 
+    names_to = "Count_Type", 
+    values_to = "Count_Value"
+  )
+
+# 2. Create the Grouped Bar Plot with Log Scale
+ggplot(plot_data, aes(x = Race, y = Count_Value, fill = Count_Type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  # Apply the log transformation
+  # 'labels = scales::comma' makes the numbers easier to read (e.g., 1,000 instead of 1e3)
+#  scale_y_log10(labels = scales::comma) + 
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 15)) +
+  theme_minimal(base_size=14) +
+  labs(
+    title = "Observed vs. Expected Veteran Counts by Race (Log Scale)",
+    x = "Racial Group",
+    y = "Count (Log 10)",
+    fill = "Legend"
+  ) +
+  scale_fill_manual(
+    values = c("Expected_Count" = "#2a79d5", "Observed_Count" = "#29b9d6"),
+    labels = c("Expected", "Observed")
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.minor.y = element_blank() # Clean up log grid lines
+  )
+```
+
+
+```{r}
+# Compare veteran race proportions against national expected proportions
+
+observed_counts <- as.numeric(vet_race_counts)
+race_names <- names(vet_race_counts)
+n_total <- sum(observed_counts)
+
+race_prop_tests <- data.frame(
+  Race = race_names,
+  Observed_Count = observed_counts,
+  Observed_Prop = observed_counts / n_total,
+  Expected_Prop = expected_probs
+) %>%
+  rowwise() %>%
+  mutate(
+    p_value = prop.test(
+      x = Observed_Count,
+      n = n_total,
+      p = Expected_Prop,
+      correct = FALSE
+    )$p.value
+  ) %>%
+  ungroup() %>%
+  mutate(
+    p_adj_bonferroni = p.adjust(p_value, method = "bonferroni"),
+    difference = Observed_Prop - Expected_Prop,
+    abs_difference = abs(difference)
+  ) %>%
+  arrange(p_value)
+
+race_prop_tests
+```
+
+
+```{r}
+race_prop_tests %>%
+  mutate(direction = ifelse(difference > 0, "Overrepresented", "Underrepresented")) %>%
+  select(Race, Observed_Prop, Expected_Prop, direction, p_adj_bonferroni)
+```
+
+
+
+
+
+
+---
+title: "Veteran Demographics Analysis"
+format: html
+---
+
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+
+library(dplyr)
+library(gt)
+
+# 1. Recreating your processed dataframe based on the screenshot
+# (In your actual file, you can just use 'race_prop_tests' from your previous code)
+race_prop_tests <- data.frame(
+  Race = c("Asian only, non-Hispanic", "Hispanic", "White only, non-Hispanic", 
+           "Black only, non-Hispanic", "American Indian or Alaskan Native only, Non-Hispanic",
+           "Native Hawaiian or other Pacific Islander only, Non-Hispanic", "Multiracial, non-Hispanic"),
+  Observed_Prop = c(0.012736694, 0.049953993, 0.813162865, 0.074313526, 0.017119473, 0.006344133, 0.026369316),
+  Expected_Prop = c(0.061, 0.191, 0.589, 0.126, 0.007, 0.002, 0.024),
+  p_adj_bonferroni = c(0, 0, 0, 4.990780e-219, 1.735058e-133, 4.604660e-86, 1.158692e-02)
+) %>%
+  mutate(direction = ifelse(Observed_Prop > Expected_Prop, "Overrepresented", "Underrepresented"))
+
+# 2. Generate the formatted table
+race_prop_tests %>%
+  gt() %>%
+  # Relabel columns to match your desired style
+  cols_label(
+    Race = "Race",
+    Observed_Prop = "Veteran Prop.",
+    Expected_Prop = "National Prop.",
+    direction = "Representation",
+    p_adj_bonferroni = "p-value (adj)"
+  ) %>%
+  # Format proportions as decimals (matching your first screenshot style)
+  fmt_number(
+    columns = c(Observed_Prop, Expected_Prop),
+    decimals = 4
+  ) %>%
+  # Format p-values: small values as < 2.2e-16 or scientific notation
+  fmt_scientific(
+    columns = p_adj_bonferroni,
+    decimals = 2
+  ) %>%
+  # Apply the "Academic/Minimalist" styling (Thin lines top and bottom)
+  tab_options(
+    table.border.top.color = "black",
+    table.border.top.width = px(2),
+    table.border.bottom.color = "black",
+    table.border.bottom.width = px(2),
+    column_labels.border.bottom.color = "black",
+    column_labels.border.bottom.width = px(1),
+    table_body.hlines.style = "none", # Removes horizontal lines between rows
+    data_row.padding = px(4)
+  ) %>%
+  # Align text left and numbers right
+  cols_align(
+    align = "left",
+    columns = Race
+  ) %>%
+  # Handle the extremely small p-values to look like the screenshot
+  text_transform(
+    locations = cells_body(columns = p_adj_bonferroni, rows = p_adj_bonferroni < 2.2e-16),
+    fn = function(x) "< 2.2e-16"
+  )
+
+
+
+```
+
+
+
+
+```{r}
+
+# measuring differences in Demographics: education level
+
+brfss_veterans_edu <- brfss %>%
+  filter(veteran == "Yes", age >= 25, !is.na(education))
+
+table(brfss$education, useNA = "ifany")
+
+
+brfss_veterans_edu <- brfss %>%
+  filter(veteran == "Yes", age >= 25, !is.na(education)) %>%
+  mutate(edu_group = case_when(
+    education %in% c("No school", "Elementary", "Some HS") ~ "Less than high school",
+    education == "HS Grad" ~ "High school graduate",
+    education == "Some College" ~ "Some college",
+    education == "College Grad" ~ "Bachelor's or higher",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(edu_group))
+```
+
+
+```{r}
+# Education comparison: BRFSS veterans vs 2022 U.S. national education distribution
+## Education comparison: BRFSS veterans vs 2022 U.S. national education distribution
+# Source: U.S. Census ACS 2022 S1501, population age 25+
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(stringr)
+library(readr)
+
+# Census ACS 2022 proportions, age 25+
+# These are rounded published values, so we normalize them below.
+expected_edu_props <- c(
+  "Less than high school" = 0.109,
+  "High school graduate" = 0.264,
+  "Some college / associate" = 0.285,
+  "Bachelor's or higher" = 0.209 + 0.134
+)
+
+# Force probabilities to sum exactly to 1
+expected_edu_props <- expected_edu_props / sum(expected_edu_props)
+
+# Clean BRFSS veteran education data
+brfss_veterans_edu <- brfss %>%
+  filter(veteran == "Yes", !is.na(education)) %>%
+  mutate(
+    age_num = if ("age" %in% names(.)) parse_number(as.character(age)) else NA_real_,
+    edu_group = case_when(
+      education %in% c("No school", "Elementary", "Some HS") ~ "Less than high school",
+      education == "HS Grad" ~ "High school graduate",
+      education == "Some College" ~ "Some college / associate",
+      education == "College Grad" ~ "Bachelor's or higher",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  filter(!is.na(edu_group)) %>%
+  filter(is.na(age_num) | age_num >= 25)
+
+# Observed counts
+observed_edu_counts <- table(brfss_veterans_edu$edu_group)
+
+# Reorder expected probabilities to match observed table
+expected_edu_props_ordered <- expected_edu_props[names(observed_edu_counts)]
+
+# Normalize again after reordering, just in case any categories are missing
+expected_edu_props_ordered <- expected_edu_props_ordered / sum(expected_edu_props_ordered)
+
+# Chi-square goodness-of-fit test
+edu_chisq_test <- chisq.test(
+  observed_edu_counts,
+  p = expected_edu_props_ordered
+)
+
+edu_chisq_test
+
+# Table showing which education groups differ most
+edu_diff_table <- data.frame(
+  Education = names(observed_edu_counts),
+  Observed_Count = as.numeric(observed_edu_counts),
+  Expected_Prop = expected_edu_props_ordered
+) %>%
+  mutate(
+    Total = sum(Observed_Count),
+    Observed_Prop = Observed_Count / Total,
+    Expected_Count = Expected_Prop * Total,
+#    Difference = Observed_Prop - Expected_Prop,
+#    Percent_Point_Gap = 100 * Difference,
+ #   ChiSq_Contribution = (Observed_Count - Expected_Count)^2 / Expected_Count,
+    Direction = ifelse(Difference > 0, "Overrepresented", "Underrepresented")
+  ) %>%
+  arrange(desc(ChiSq_Contribution))
+
+edu_diff_table
+
+# Education group that differs most
+edu_diff_table %>%
+  slice_max(ChiSq_Contribution, n = 1)
+
+# Plot observed vs expected proportions
+edu_diff_table %>%
+  select(Education, Observed_Prop, Expected_Prop) %>%
+  pivot_longer(
+    cols = c(Observed_Prop, Expected_Prop),
+    names_to = "Type",
+    values_to = "Proportion"
+  ) %>%
+  ggplot(aes(x = Education, y = Proportion, fill = Type)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::percent) +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Veteran Education Distribution vs 2022 U.S. National Average",
+    x = "Education Level",
+    y = "Proportion",
+    fill = "Group"
+  ) +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+
+
+```{r}
+# One-sample proportion tests for each education group
+# with Bonferroni correction
+
+edu_prop_tests <- data.frame(
+  Education = names(observed_edu_counts),
+  Observed_Count = as.numeric(observed_edu_counts),
+  Expected_Prop = expected_edu_props_ordered
+) %>%
+  mutate(
+    Total = sum(Observed_Count),
+    Observed_Prop = Observed_Count / Total,
+    Difference = Observed_Prop - Expected_Prop,
+  ) %>%
+  rowwise() %>%
+  mutate(
+    p_value = prop.test(
+      x = Observed_Count,
+      n = Total,
+      p = Expected_Prop,
+      correct = FALSE
+    )$p.value
+  ) %>%
+  ungroup() %>%
+  mutate(
+    p_bonferroni = p.adjust(p_value, method = "bonferroni"),
+    Significant_Bonferroni = p_bonferroni < 0.05,
+    Direction = ifelse(Difference > 0, "Overrepresented", "Underrepresented")
+  ) %>%
+  arrange(p_bonferroni)
+
+edu_prop_tests <- edu_prop_tests %>%
+  select(
+    Education,
+    Observed_Prop,
+    Expected_Prop,
+    p_bonferroni,
+    Direction
+  )
+
+edu_prop_tests
+```
+
+
+
+
+```{r}
+# Income comparison: BRFSS veterans vs 2022 U.S. national household income distribution
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(stringr)
+
+# Manually entered 2022 ACS national household income proportions
+# Broad categories based on Census ACS B19001
+national_income_df <- data.frame(
+  Income = c(
+    "Less than $25,000",
+    "$25,000 to less than $50,000",
+    "$50,000 to less than $75,000",
+    "$75,000 or more"
+  ),
+  Expected_Prop = c(
+    0.161,
+    0.171,
+    0.148,
+    0.520
+  )
+) %>%
+  mutate(Expected_Prop = Expected_Prop / sum(Expected_Prop))
+
+# Clean BRFSS veteran income data
+brfss_veterans_income <- brfss %>%
+  filter(veteran == "Yes", !is.na(income)) %>%
+  mutate(
+    income_chr = as.character(income),
+    income_group = case_when(
+      income_chr %in% c(
+        "Less than $10000",
+        "$10000 to $14999",
+        "$15000 to $19999",
+        "$20000 to $24999"
+      ) ~ "Less than $25,000",
+      
+      income_chr %in% c(
+        "$25000 to $34999",
+        "$35000 to $49999"
+      ) ~ "$25,000 to less than $50,000",
+      
+      income_chr == "$50000 to $74999" ~ "$50,000 to less than $75,000",
+      
+      income_chr %in% c(
+        "$75000 to $99999",
+        "$100000 to $149999",
+        "$150000 to $199999",
+        "$200000 or more"
+      ) ~ "$75,000 or more",
+      
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  filter(!is.na(income_group))
+
+# Observed veteran income counts
+observed_income_counts <- table(brfss_veterans_income$income_group)
+
+# Expected proportions ordered to match observed table
+expected_income_props_ordered <- national_income_df$Expected_Prop[
+  match(names(observed_income_counts), national_income_df$Income)
+]
+
+expected_income_props_ordered <- expected_income_props_ordered / sum(expected_income_props_ordered)
+
+# Chi-square goodness-of-fit test
+income_chisq_test <- chisq.test(
+  observed_income_counts,
+  p = expected_income_props_ordered
+)
+
+income_chisq_test
+
+# Table showing which income groups differ most
+income_diff_table <- data.frame(
+  Income = names(observed_income_counts),
+  Observed_Count = as.numeric(observed_income_counts),
+  Expected_Prop = expected_income_props_ordered
+) %>%
+  mutate(
+    Total = sum(Observed_Count),
+    Observed_Prop = Observed_Count / Total,
+    Expected_Count = Expected_Prop * Total,
+    Difference = Observed_Prop - Expected_Prop,
+    ChiSq_Contribution = (Observed_Count - Expected_Count)^2 / Expected_Count,
+    Direction = ifelse(Difference > 0, "Overrepresented", "Underrepresented")
+  ) %>%
+  arrange(desc(ChiSq_Contribution))
+
+income_diff_table
+
+# One-sample proportion tests with Bonferroni correction
+income_prop_tests <- data.frame(
+  Income = names(observed_income_counts),
+  Observed_Count = as.numeric(observed_income_counts),
+  Expected_Prop = expected_income_props_ordered
+) %>%
+  mutate(
+    Total = sum(Observed_Count),
+    Observed_Prop = Observed_Count / Total,
+    Difference = Observed_Prop - Expected_Prop
+  ) %>%
+  rowwise() %>%
+  mutate(
+    p_value = prop.test(
+      x = Observed_Count,
+      n = Total,
+      p = Expected_Prop,
+      correct = FALSE
+    )$p.value
+  ) %>%
+  ungroup() %>%
+  mutate(
+    p_bonferroni = p.adjust(p_value, method = "bonferroni"),
+    Direction = ifelse(Difference > 0, "Overrepresented", "Underrepresented")
+  ) %>%
+  select(
+    Income,
+    Observed_Prop,
+    Expected_Prop,
+    p_bonferroni,
+    Direction
+  ) %>%
+  arrange(p_bonferroni)
+
+income_prop_tests
+# Plot observed vs expected proportions using same color scheme
+income_diff_table %>%
+  select(Income, Observed_Prop, Expected_Prop) %>%
+  pivot_longer(
+    cols = c(Observed_Prop, Expected_Prop),
+    names_to = "Type",
+    values_to = "Proportion"
+  ) %>%
+  mutate(
+    Type = recode(
+      Type,
+      "Observed_Prop" = "Observed",
+      "Expected_Prop" = "Expected"
+    )
+  ) %>%
+  ggplot(aes(x = Income, y = Proportion, fill = Type)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(
+    values = c("Expected" = vet_blue, "Observed" = vet_teal)
+  ) +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Veteran Income Distribution vs 2022 U.S. National Average",
+    x = "Income Level",
+    y = "Proportion",
+    fill = "Group"
+  ) +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Veteran vs Non Veteran: Mental + Physical Health
+
+#Amanda Section 
+
+```{r}
+#| echo: false
+library(dplyr)
+brfss = read.csv("brfss2022_m62.csv", stringsAsFactors=TRUE)
+veteran <- subset(brfss, veteran == "Yes")
+nrow(veteran)
+nonVeteran <- subset(brfss, veteran == "No")
+nrow(nonVeteran)
+```
+
+Comparisons of physical health between veterans and non-veterans:
+
+Arthritis: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranArthClean <- veteran %>% filter(!is.na(arthritis))
+nonVeteranArthClean <- nonVeteran %>% filter(!is.na(arthritis))
+
+arthritisVeterans <- sum(veteranArthClean$arthritis == "Yes")
+arthritisNonVeterans <- sum(nonVeteranArthClean$arthritis == "Yes")
+
+successes <- c(arthritisVeterans, arthritisNonVeterans)
+n_obs <- c(nrow(veteranArthClean), nrow(nonVeteranArthClean))
+
+arthritis_prop_test <- prop.test(successes, n_obs)
+arthritis_prop_test
+```
+
+Heart Disease: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranHDClean <- veteran %>% filter(!is.na(heartdisease))
+nonVeteranHDClean <- nonVeteran %>% filter(!is.na(heartdisease))
+
+hdVeterans <- sum(veteranHDClean$heartdisease == "Yes")
+hdNonVeterans <- sum(nonVeteranHDClean$heartdisease == "Yes")
+
+successes <- c(hdVeterans, hdNonVeterans)
+n_obs <- c(nrow(veteranHDClean), nrow(nonVeteranHDClean))
+
+hd_prop_test <- prop.test(successes, n_obs)
+hd_prop_test
+```
+
+Cancer: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranCancerClean <- veteran %>% filter(!is.na(cancer))
+nonVeteranCancerClean <- nonVeteran %>% filter(!is.na(cancer))
+
+cancerVeterans <- sum(veteranCancerClean$cancer == "Yes")
+cancerNonVeterans <- sum(nonVeteranCancerClean$cancer == "Yes")
+
+successes <- c(cancerVeterans, cancerNonVeterans)
+n_obs <- c(nrow(veteranCancerClean), nrow(nonVeteranCancerClean))
+
+cancer_prop_test <- prop.test(successes, n_obs)
+cancer_prop_test
+```
+
+Diabetes: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranDiabetesClean <- veteran %>% filter(!is.na(diabetes))
+nonVeteranDiabetesClean <- nonVeteran %>% filter(!is.na(diabetes))
+
+diabetesVeterans <- sum(veteranDiabetesClean$diabetes == "Yes")
+diabetesNonVeterans <- sum(nonVeteranDiabetesClean$diabetes == "Yes")
+
+successes <- c(diabetesVeterans, diabetesNonVeterans)
+n_obs <- c(nrow(veteranDiabetesClean), nrow(nonVeteranDiabetesClean))
+
+diabetes_prop_test <- prop.test(successes, n_obs)
+diabetes_prop_test
+```
+
+COPD: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranCOPDClean <- veteran %>% filter(!is.na(copd))
+nonVeteranCOPDClean <- nonVeteran %>% filter(!is.na(copd))
+
+copdVeterans <- sum(veteranCOPDClean$copd == "Yes")
+copdNonVeterans <- sum(nonVeteranCOPDClean$copd == "Yes")
+
+successes <- c(copdVeterans, copdNonVeterans)
+n_obs <- c(nrow(veteranCOPDClean), nrow(nonVeteranCOPDClean))
+
+copd_prop_test <- prop.test(successes, n_obs)
+copd_prop_test
+```
+
+daysphyshlthnotgood: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranDaysphyshlthnotgoodClean <- veteran %>% filter(!is.na(daysphyshlthnotgood))
+nonVeteranDaysphyshlthnotgoodClean <- nonVeteran %>% filter(!is.na(daysphyshlthnotgood))
+
+daysphyshlthnotgoodVeterans <- mean(veteranDaysphyshlthnotgoodClean$daysphyshlthnotgood)
+daysphyshlthnotgoodNonVeterans <- mean(nonVeteranDaysphyshlthnotgoodClean$daysphyshlthnotgood)
+
+daysphyshlthnotgood_t_test <- t.test(veteranDaysphyshlthnotgoodClean$daysphyshlthnotgood,
+                                     nonVeteranDaysphyshlthnotgoodClean$daysphyshlthnotgood,
+                                     alternative="two.sided",
+                                     mu=0, paired=FALSE, var.equal = FALSE,
+                                     conf.level=0.95)
+daysphyshlthnotgood_t_test
+```
+
+Check Assumptions (equal variances):
+```{r}
+#| echo: false
+#| 
+hist(veteranDaysphyshlthnotgoodClean$daysphyshlthnotgood,
+     main = "Days Physical Health Not Good (Veteran)",
+     xlab = "Number of days in past month physical health was not good")
+hist(nonVeteranDaysphyshlthnotgoodClean$daysphyshlthnotgood,
+     main = "Days Physical Health Not Good (Non-Veteran)",
+     xlab = "Number of days in past month physical health was not good")
+```
+
+
+```{r}
+#| echo: false
+# Summary of physical health tests
+
+factors <- c("Arthritis", "Heart Disease", "Cancer", "Diabetes", "COPD", "Days Physical Health Not Good")
+prop_vet <- c(0.4356422, 0.1244373, 0.1789827, 0.1962027, 0.11969946, 4.972634)
+prop_nonVet <- c(0.3455287, 0.0543102, 0.1105903, 0.1340290, 0.07724301, 4.338173)
+p_values <- rep("< 2.2e-16", 6)
+
+physical_tests <- data.frame(
+  Factors = factors,
+  Veteran = prop_vet,
+  NonVeteran = prop_nonVet,
+  pvalue = p_values
+)
+
+physical_tests
+```
+
+```{r}
+#| echo: false
+# Enhanced R Plotting Script
+#| echo: false
+
+# --- Data ---
+labels_a <- c("Arthritis", "Heart Disease", "Cancer", "Diabetes", "COPD")
+prop_vet <- c(0.4356422, 0.1244373, 0.1789827, 0.1962027, 0.11969946)
+prop_nonVet <- c(0.3455287, 0.0543102, 0.1105903, 0.1340290, 0.07724301)
+data_matrix_a <- rbind(prop_vet, prop_nonVet)
+colnames(data_matrix_a) <- labels_a
+
+labels_b <- c("Days Phys. Health\nNot Good")
+mean_vet <- c(4.972634)
+mean_nonVet <- c(4.338173)
+data_matrix_b <- rbind(mean_vet, mean_nonVet)
+colnames(data_matrix_b) <- labels_b
+
+chart_colors <- c("#2a79d5", "#29b9d6")
+
+# --- Layout Configuration ---
+par(mfrow = c(1, 2), mar = c(5, 4, 4, 2))
+
+# --- Plot 1: Chronic Conditions ---
+# Initialize the plot area without drawing bars yet to set up the grid
+bp1 <- barplot(data_matrix_a, beside = TRUE, col = NA, border = NA, 
+               main = "Chronic Health Conditions", ylab = "Proportion", 
+               ylim = c(0, 0.5), las = 1, cex.names = 0.7, font.main = 2)
+
+# Draw the grid lines FIRST
+grid(nx = NA, ny = NULL, col = "gray90", lty = "solid")
+
+# Overlay the bars ON TOP of the grid
+barplot(data_matrix_a, 
+        beside = TRUE, 
+        col = chart_colors,
+        border = "white",
+        add = TRUE,          # This tells R to draw over the existing grid
+        las = 1, 
+        cex.names = 0.7,
+        xaxt = "n")          # Prevents double-drawing labels
+
+legend("topright", legend = c("Veteran", "Non-Veteran"), 
+       fill = chart_colors, bty = "n", cex = 0.7)
+
+# --- Plot 2: Quality of Life ---
+barplot(data_matrix_b, beside = TRUE, col = NA, border = NA, 
+        main = "Average Days Unwell", ylab = "Mean Days", 
+        ylim = c(0, 6), las = 1, cex.names = 0.7, font.main = 2)
+
+grid(nx = NA, ny = NULL, col = "gray90", lty = "solid")
+
+barplot(data_matrix_b, 
+        beside = TRUE, 
+        col = chart_colors,
+        border = "white",
+        add = TRUE, 
+        las = 2, 
+        cex.names = 0.7,
+        xaxt = "n")
+
+# Reset
+par(mfrow = c(1, 1))
+```
+
+Comparisons of mental health between veterans and non-veterans:
+
+Depression: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranDepressClean <- veteran %>% filter(!is.na(depress))
+nonVeteranDepressClean <- nonVeteran %>% filter(!is.na(depress))
+
+depressVeterans <- sum(veteranDepressClean$depress == "Yes")
+depressNonVeterans <- sum(nonVeteranDepressClean$depress == "Yes")
+
+successes <- c(depressVeterans, depressNonVeterans)
+n_obs <- c(nrow(veteranDepressClean), nrow(nonVeteranDepressClean))
+
+depress_prop_test <- prop.test(successes, n_obs)
+depress_prop_test
+```
+
+daysmenthlthnotgood: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranDaysmenthlthnotgoodClean <- veteran %>% filter(!is.na(daysmenthlthnotgood))
+nonVeteranDaysmenthlthnotgoodClean <- nonVeteran %>% filter(!is.na(daysmenthlthnotgood))
+
+daysmenthlthnotgoodVeterans <- mean(veteranDaysmenthlthnotgoodClean$daysmenthlthnotgood)
+daysmenthlthnotgoodNonVeterans <- mean(nonVeteranDaysmenthlthnotgoodClean$daysmenthlthnotgood)
+
+daysmenthlthnotgood_t_test <- t.test(veteranDaysmenthlthnotgoodClean$daysmenthlthnotgood,
+                                     nonVeteranDaysmenthlthnotgoodClean$daysmenthlthnotgood,
+                                     alternative="two.sided",
+                                     mu=0, paired=FALSE, var.equal = TRUE,
+                                     conf.level=0.95)
+daysmenthlthnotgood_t_test
+```
+
+Check Assumptions (equal variances):
+```{r}
+#| echo: false
+#| 
+hist(veteranDaysmenthlthnotgoodClean$daysmenthlthnotgood,
+     main = "Days Mental Health Not Good (Veteran)",
+     xlab = "Number of days in past month mental health was not good")
+hist(nonVeteranDaysmenthlthnotgoodClean$daysmenthlthnotgood,
+     main = "Days Mental Health Not Good (Non-Veteran)",
+     xlab = "Number of days in past month mental health was not good")
+```
+
+```{r}
+#| echo: false
+# Summary of Mental Health Tests
+
+factors <- c("Depression", "Days Physical Health Not Good")
+prop_vet <- c(0.1757344, 3.517690)
+prop_nonVet <- c(0.2166535, 4.462462)
+p_values <- rep("< 2.2e-16", 2)
+
+mental_tests <- data.frame(
+  Factors = factors,
+  Veteran = prop_vet,
+  NonVeteran = prop_nonVet,
+  pvalue = p_values
+)
+
+mental_tests
+```
+
+```{r}
+#| echo: false
+# generated with help from gemini
+
+# Your vectors
+labels_a <- c("Depression")
+prop_vet <- c(0.1757344)
+prop_nonVet <- c(0.2166535)
+
+# Combine into a matrix
+data_matrix_a <- rbind(prop_vet, prop_nonVet)
+
+# Assign column names to the matrix
+colnames(data_matrix_a) <- labels_a
+
+# Your vectors
+labels_b <- c("daysmenthlthnotgood")
+mean_vet <- c(3.517690)
+mean_nonVet <- c(4.462462)
+
+# Combine into a matrix
+data_matrix_b <- rbind(mean_vet, mean_nonVet)
+
+# Assign column names to the matrix
+colnames(data_matrix_b) <- labels_b
+
+# Create the grouped barplot
+# Adjust margins so the long label fits (bottom, left, top, right)
+par(mar = c(12, 4, 4, 2) + 0.1)
+par(mfrow=c(1,2))
+
+barplot(data_matrix_a, 
+        beside = TRUE,                   # This places the bars side-by-side
+        col = c("skyblue", "salmon"),    # Colors for the two groups
+        legend.text = c("Veteran", "Non-Veteran"),
+        args.legend = list(x = "topright", bty = "n"),
+        main = "Health Indicators: ",
+        ylab = "Value",
+        las = 1,                         # Rotates x-axis labels to be vertical
+        cex.names = 0.8)                 # Shrinks the label text slightly
+
+barplot(data_matrix_b, 
+        beside = TRUE,                   # This places the bars side-by-side
+        col = c("skyblue", "salmon"),    # Colors for the two groups
+        legend.text = c("Veteran", "Non-Veteran"),
+        args.legend = list(x = "topright", bty = "n"),
+        main = "Veterans vs Non-Veterans",
+        ylab = "Value",
+        las = 1,                         # Rotates x-axis labels to be vertical
+        cex.names = 0.8)                 # Shrinks the label text slightly
+```
+
+What is the difference in the probability of having a specific health factor being a veteran vs. non-veteran?
+
+```{r}
+#| echo: false
+
+arthritisClean <- brfss %>% filter(!is.na(arthritis))
+
+arthritisClean$veteran <- as.factor(arthritisClean$veteran)
+
+arthritisClean$arthritis <- as.factor(arthritisClean$arthritis)
+
+arthritisMod <- glm(formula = arthritis ~ veteran, data = arthritisClean, family = "binomial")
+
+summary(arthritisMod)
+```
+
+```{r}
+p_vet_arthritis <- plogis(-0.63875 + 0.37988 * 1)
+p_nonVet_arthritis <- plogis(-0.63875 + 0.37988 * 0)
+
+cat("P(Arthritis | Veteran) = ", p_vet_arthritis)
+cat('\n')
+cat("P(Arthritis | Non-Veteran) = ", p_nonVet_arthritis)
+```
+
+```{r}
+#| echo: false
+
+hdClean <- brfss %>% filter(!is.na(heartdisease))
+
+hdClean$veteran <- as.factor(hdClean$veteran)
+
+hdClean$heartdisease <- as.factor(hdClean$heartdisease)
+
+hdMod <- glm(formula = heartdisease ~ veteran, data = hdClean, family = "binomial")
+
+summary(hdMod)
+```
+
+```{r}
+p_vet_hd <- plogis(-2.857202 + 0.906138 * 1)
+p_nonVet_hd <- plogis(-2.857202 + 0.906138 * 0)
+
+cat("P(Heart Disease | Veteran) = ", p_vet_hd)
+cat('\n')
+cat("P(Heart Disease | Non-Veteran) = ", p_nonVet_hd)
+```
+
+```{r}
+#| echo: false
+
+cancerClean <- brfss %>% filter(!is.na(cancer))
+
+cancerClean$veteran <- as.factor(cancerClean$veteran)
+
+cancerClean$cancer <- as.factor(cancerClean$cancer)
+
+cancerMod <- glm(formula = cancer ~ veteran, data = cancerClean, family = "binomial")
+
+summary(cancerMod)
+```
+
+```{r}
+p_vet_cancer <- plogis(-2.084725 + 0.56147 * 1)
+p_nonVet_cancer <- plogis(-2.084725 + 0.56147 * 0)
+
+cat("P(Cancer | Veteran) = ", p_vet_cancer)
+cat('\n')
+cat("P(Cancer | Non-Veteran) = ", p_nonVet_cancer)
+```
+
+```{r}
+#| echo: false
+
+diabetesClean <- brfss %>% filter(!is.na(diabetes))
+
+diabetesClean$veteran <- as.factor(diabetesClean$veteran)
+
+diabetesClean$diabetes <- as.factor(diabetesClean$diabetes)
+
+diabetesMod <- glm(formula = diabetes ~ veteran, data = diabetesClean, family = "binomial")
+
+summary(diabetesMod)
+```
+
+```{r}
+p_vet_diabetes <- plogis(-1.602633 + 0.370480 * 1)
+p_nonVet_diabetes <- plogis(-1.602633 + 0.370480 * 0)
+
+cat("P(Diabetes | Veteran) = ", p_vet_diabetes)
+cat('\n')
+cat("P(Diabetes | Non-Veteran) = ", p_nonVet_diabetes)
+```
+
+```{r}
+#| echo: false
+
+copdClean <- brfss %>% filter(!is.na(copd))
+
+copdClean$veteran <- as.factor(copdClean$veteran)
+
+copdClean$diabetes <- as.factor(copdClean$copd)
+
+copdMod <- glm(formula = copd ~ veteran, data = copdClean, family = "binomial")
+
+summary(copdMod)
+```
+
+```{r}
+p_vet_copd <- plogis(-2.480409 + 0.485130 * 1)
+p_nonVet_copd <- plogis(-2.480409 + 0.485130 * 0)
+
+cat("P(COPD | Veteran) = ", p_vet_copd)
+cat('\n')
+cat("P(COPD | Non-Veteran) = ", p_nonVet_copd)
+```
+
+```{r}
+#| echo: false
+
+depressClean <- brfss %>% filter(!is.na(depress))
+
+depressClean$veteran <- as.factor(depressClean$veteran)
+
+depressClean$depress <- as.factor(depressClean$depress)
+
+depressMod <- glm(formula = depress ~ veteran, data = depressClean, family = "binomial")
+
+summary(depressMod)
+```
+
+```{r}
+p_vet_depress <- plogis(-1.285276 - 0.260243 * 1)
+p_nonVet_depress <- plogis(-1.285276 - 0.260243 * 0)
+
+cat("P(Depressive Disorder Diagnosis | Veteran) = ", p_vet_depress)
+cat('\n')
+cat("P(Depressive Disorder Diagnosis | Non-Veteran) = ", p_nonVet_depress)
+```
+
+# Factors that impact veteran physical + mental health
+
+#Elsa Section
+
+What are some factors that influence physical health among veterans
+
+```{r}
+library(sjPlot)
+library(sjlabelled)
+library(sjmisc)
+library(ggplot2)
+library(ggplot)
+brfss = read.csv("brfss2022_m62.csv", stringsAsFactors=TRUE)
+
+head(brfss)
+```
+
+```{r Physical Health: Heart Disease}
+#| echo: false
+veteran <- subset(brfss, veteran == "Yes")
+
+
+# Code below is Gemini generated: Prompt was that given these age groups, merge them so that we have three columns of young adult, middle age, and seniors
+
+# 1. Create the new categorization logic
+# We assign the categories based on the modified strings
+veteran$age_category <- ifelse(veteran$age %in% c("25 to 29", "30 to 34", "35 to 39"), "young adult",
+                        ifelse(veteran$age %in% c("40 to 44", "45 to 49", "50 to 54", "55 to 59", "60 to 64"), "middle-aged",
+                        ifelse(veteran$age %in% c("65 to 69", "70 to 74", "75 to 79", "80 or older"), "senior", NA)))
+
+# 2. Remove the old granular column and rename the new one to 'age'
+veteran$age <- NULL
+names(veteran)[names(veteran) == "age_category"] <- "age"
+
+#Code below is Gemini generated: Prompt was that given these income groups, merge them so that we have three columns of high income, medium income, low income
+# 1. Create the new categorization logic
+veteran$income <- ifelse(veteran$income %in% c("$150000 to $199999", "$200000 or more"), 
+                                "high income",
+                         ifelse(veteran$income %in% c("Less than $10000", "$10000 to $14999", 
+                                                             "$15000 to $19999", "$20000 to $24999", 
+                                                             "$25000 to $34999"), 
+                                "low income",
+                         ifelse(is.na(veteran$income), NA, "medium income")))
+
+# 2. Check the results
+table(veteran$income, useNA = "always")
+
+```
+
+
+```{r}
+# Two lines below generated by Gemini, prompt was that given these columns, drop any rows where any of these columns are NA
+# Define the variables of interest
+vars <- c("heartdisease", "sex", "bmi", "cancer", "copd", 
+          "daysphyshlthnotgood", "anyexer", "race", 
+          "age", "bingedrinker", "weeklydrinks", "heartdisease")
+
+# Subset rows where all specified columns are non-NA
+veteran_physical <- veteran[complete.cases(veteran[, vars]), ]
+```
+
+
+```{r}
+#| echo: false
+model_heartdisease <- glm(formula = heartdisease ~ sex + bmi + copd +
+                 daysphyshlthnotgood + anyexer + race +
+                 age + bingedrinker + weeklydrinks , data=veteran_physical, family=binomial)
+
+```
+
+
+
+
+```{r Physical Health: Cancer}
+#| echo: false
+
+model_cancer <- glm(formula = cancer ~ sex + bmi + copd +
+                 daysphyshlthnotgood + anyexer + race +
+                 age + bingedrinker + weeklydrinks , data=veteran_physical, family=binomial)
+
+```
+
+
+```{r Physical Health: Diabetes}
+#| echo: false
+
+model_diabetes <- glm(formula = diabetes ~ sex + bmi + copd +
+                 daysphyshlthnotgood + anyexer + race +
+                 age + bingedrinker + weeklydrinks , data=veteran_physical, family=binomial)
+
+```
+
+```{r Physical Health: BMI}
+#| echo: false
+
+model_bmi <- lm(formula = bmi ~ sex + copd +
+                 daysphyshlthnotgood + anyexer + race +
+                 age + bingedrinker + weeklydrinks , data=veteran_physical)
+
+```
+
+What are some factors that influence mental health among veterans
+
+```{r Mental Health: Depression}
+#| echo: false
+
+# Two lines below generated by Gemini, prompt was that given these columns, drop any rows where any of these columns are NA
+# Define the variables of interest
+
+vars_mental <- c("daysmenthlthnotgood", "income", "race", "age", "bingedrinker", "weeklydrinks", "sex", "anyexer", "depress")
+
+# Subset rows where all specified columns are non-NA
+veteran_mental <- veteran[complete.cases(veteran[, vars_mental]), ]
+
+
+model_depression <- glm(formula = depress ~ sex + income +
+                 daysmenthlthnotgood + anyexer + race +
+                 age + bingedrinker + weeklydrinks , data=veteran_mental, family=binomial)
+
+```
+
+
+```{r}
+#Below code generated by Gemini, instructions was to make a data frame table that included the below columns based on a given regression model
+
+# 1. Updated Helper Function to include p-values
+get_sig_df <- function(model) {
+  # Extract coefficients into a data frame
+  stats <- as.data.frame(summary(model)$coefficients)
+  
+  # Standardize column names
+  colnames(stats) <- c("Coefficient", "StdError", "t_z_value", "p_value")
+  
+  # Move Predictors to a column
+  stats$Predictor <- rownames(stats)
+  
+  # Calculate Odds Ratio
+  stats$Odds_Ratio <- exp(stats$Coefficient)
+  
+  # Filter for significance (p < 0.01) to be on the safe side
+  # Select Predictor, Coefficient, Odds_Ratio, and p_value
+  final_df <- stats[stats$p_value < 0.01, c("Predictor", "Coefficient", "Odds_Ratio", "p_value")]
+  
+  # Reset row names
+  rownames(final_df) <- NULL
+  
+  return(final_df)
+}
+
+# 2. Generate the 5 data frames
+sig_heart    <- get_sig_df(model_heartdisease)
+sig_cancer   <- get_sig_df(model_cancer)
+sig_diabetes <- get_sig_df(model_diabetes)
+sig_bmi      <- get_sig_df(model_bmi)
+sig_depress  <- get_sig_df(model_depression)
+
+# 3. Display the tables
+cat("\n--- Table 1: Heart Disease ---\n")
+print(sig_heart)
+
+cat("\n--- Table 2: Cancer ---\n")
+print(sig_cancer)
+
+cat("\n--- Table 3: Diabetes ---\n")
+print(sig_diabetes)
+
+cat("\n--- Table 4: BMI ---\n")
+print(sig_bmi)
+
+cat("\n--- Table 5: Depression ---\n")
+print(sig_depress)
+
+```
+
+
+```{r}
+plot(model_bmi, which = 1)
+plot(model_bmi, which = 2)
+```
