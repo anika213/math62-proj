@@ -39,19 +39,11 @@ Sharma, Anika
 
 ---
 
-```{r}
-#| echo: true
-2 * 2
-```
-
-The `echo: true` option enables the printing of code (only output is displayed).
-
-
 # EDA Section
 
-
-
 ```{r}
+# generated with gemini
+# Comparison of sample sizes between Veterans and Non-Veterans
 #| label: fig-status-dist
 #| fig-cap: "Comparison of sample sizes between Veterans and Non-Veterans."
 
@@ -70,6 +62,9 @@ ggplot(brfss %>% filter(!is.na(veteran)), aes(x = veteran)) +
 
 
 ```{r}
+# generated with gemini
+# Top 20 Predictors of Veteran Status with odds ratios calculated via logistic regression
+
 #| label: fig-log-reg
 #| fig-height: 7
 #| fig-width: 10
@@ -120,6 +115,8 @@ ggplot(coef_df, aes(x = odds_ratio, y = reorder(term, odds_ratio), color = signi
 
 
 ```{r}
+# generated with gemini
+# finding gender distribution among surveyed veterans
 #| label: fig-demographics
 #| fig-height: 10
 #| fig-width: 12
@@ -138,6 +135,8 @@ ggplot(vets, aes(x = sex)) +
 
 
 ```{r}
+# generated with gemini
+# finding age distribution of veterans
 #| label: fig-vet-age
 #| fig-cap: "Age distribution of veterans, showing a heavy skew toward older demographics."
 
@@ -155,6 +154,8 @@ ggplot(vets, aes(y = reorder(race, race, function(x) length(x)))) +
 ```
 
 ```{r}
+# generated with gemini
+# finding education level distribution among veterans
 #| label: fig-education-comparison
 #| fig-cap: "Education level distribution by veteran status."
 
@@ -193,6 +194,8 @@ brfss %>%
 
 
 ```{r}
+# generated with gemini
+# finding income level distribution among veterans
 #| label: fig-income-comparison
 #| fig-cap: "Income level distribution by veteran status."
 
@@ -228,6 +231,8 @@ brfss %>%
 
 
 ```{r}
+# generated with gemini
+# finding age distribution among veterans
 #| label: fig-age-comparison
 #| fig-cap: "Age distribution by veteran status."
 
@@ -281,8 +286,8 @@ brfss = read.csv("brfss2022_m62.csv", stringsAsFactors=TRUE)
 
 
 ```{r}
-
 # Running Chisq test to compare proportions between veterans and national data (gemini-gen)
+
 # 1. Clean the data: Filter for Veterans and non-NA race entries
 brfss_veterans <- brfss %>%
   filter(veteran == "Yes") %>%
@@ -384,6 +389,8 @@ format: html
 ---
 
 ```{r}
+# generated with gemini
+# generating table summary of results
 #| label: setup
 #| message: false
 #| warning: false
@@ -454,7 +461,7 @@ race_prop_tests %>%
 
 
 ```{r}
-
+# generated with gemini
 # measuring differences in Demographics: education level
 
 brfss_veterans_edu <- brfss %>%
@@ -477,6 +484,7 @@ brfss_veterans_edu <- brfss %>%
 
 
 ```{r}
+# generated with gemini
 # Education comparison: BRFSS veterans vs 2022 U.S. national education distribution
 ## Education comparison: BRFSS veterans vs 2022 U.S. national education distribution
 # Source: U.S. Census ACS 2022 S1501, population age 25+
@@ -578,6 +586,7 @@ edu_diff_table %>%
 
 
 ```{r}
+# generated with gemini
 # One-sample proportion tests for each education group
 # with Bonferroni correction
 
@@ -624,6 +633,7 @@ edu_prop_tests
 
 
 ```{r}
+# generated with gemini
 # Income comparison: BRFSS veterans vs 2022 U.S. national household income distribution
 
 library(dplyr)
@@ -783,23 +793,7 @@ income_diff_table %>%
   theme(axis.text.x = element_text(angle = 35, hjust = 1))
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Veteran vs Non Veteran: Mental + Physical Health
-
-#Amanda Section 
+# Amanda Section
 
 ```{r}
 #| echo: false
@@ -815,6 +809,7 @@ Comparisons of physical health between veterans and non-veterans:
 
 Arthritis: p-value $< 2.2 \times 10^{-16}$
 ```{r}
+# Prop. test of arthritis between veterans and non-veterans
 #| echo: false
 
 veteranArthClean <- veteran %>% filter(!is.na(arthritis))
@@ -832,6 +827,7 @@ arthritis_prop_test
 
 Heart Disease: p-value $< 2.2 \times 10^{-16}$
 ```{r}
+# Prop. test of heart disease between veterans and non-veterans
 #| echo: false
 
 veteranHDClean <- veteran %>% filter(!is.na(heartdisease))
@@ -849,6 +845,7 @@ hd_prop_test
 
 Cancer: p-value $< 2.2 \times 10^{-16}$
 ```{r}
+# Prop. test of cancer between veterans and non-veterans
 #| echo: false
 
 veteranCancerClean <- veteran %>% filter(!is.na(cancer))
@@ -866,6 +863,7 @@ cancer_prop_test
 
 Diabetes: p-value $< 2.2 \times 10^{-16}$
 ```{r}
+# Prop. test of diabetes between veterans and non-veterans
 #| echo: false
 
 veteranDiabetesClean <- veteran %>% filter(!is.na(diabetes))
@@ -883,6 +881,7 @@ diabetes_prop_test
 
 COPD: p-value $< 2.2 \times 10^{-16}$
 ```{r}
+# Prop. test of COPD between veterans and non-veterans
 #| echo: false
 
 veteranCOPDClean <- veteran %>% filter(!is.na(copd))
@@ -900,6 +899,7 @@ copd_prop_test
 
 daysphyshlthnotgood: p-value $< 2.2 \times 10^{-16}$
 ```{r}
+# Two-sample mean t-test of daysphyshlthnotgood between veterans and non-veterans
 #| echo: false
 
 veteranDaysphyshlthnotgoodClean <- veteran %>% filter(!is.na(daysphyshlthnotgood))
@@ -918,8 +918,8 @@ daysphyshlthnotgood_t_test
 
 Check Assumptions (equal variances):
 ```{r}
+# check variances between veterans and nonveterans
 #| echo: false
-#| 
 hist(veteranDaysphyshlthnotgoodClean$daysphyshlthnotgood,
      main = "Days Physical Health Not Good (Veteran)",
      xlab = "Number of days in past month physical health was not good")
@@ -950,6 +950,7 @@ physical_tests
 
 ```{r}
 #| echo: false
+# Summary of physical health tests
 # generated with help from gemini
 
 # Your vectors
@@ -1004,6 +1005,7 @@ Comparisons of mental health between veterans and non-veterans:
 
 Depression: p-value $< 2.2 \times 10^{-16}$
 ```{r}
+# Prop. test of depression between veterans and non-veterans
 #| echo: false
 
 veteranDepressClean <- veteran %>% filter(!is.na(depress))
@@ -1021,6 +1023,7 @@ depress_prop_test
 
 daysmenthlthnotgood: p-value $< 2.2 \times 10^{-16}$
 ```{r}
+# Two-sample mean t-test of daysmenthlthnotgood between veterans and non-veterans
 #| echo: false
 
 veteranDaysmenthlthnotgoodClean <- veteran %>% filter(!is.na(daysmenthlthnotgood))
@@ -1039,8 +1042,9 @@ daysmenthlthnotgood_t_test
 
 Check Assumptions (equal variances):
 ```{r}
+# check variances between veterans and nonveterans
 #| echo: false
-#| 
+
 hist(veteranDaysmenthlthnotgoodClean$daysmenthlthnotgood,
      main = "Days Mental Health Not Good (Veteran)",
      xlab = "Number of days in past month mental health was not good")
@@ -1070,6 +1074,7 @@ mental_tests
 
 ```{r}
 #| echo: false
+# Summary of Mental Health Tests
 # generated with help from gemini
 
 # Your vectors
@@ -1381,7 +1386,8 @@ model_depression <- glm(formula = depress ~ sex + income +
 ```
 
 
-```{r}
+```{r Generating tables}
+#| echo: false
 #Below code generated by Gemini, instructions was to make a data frame table that included the below columns based on a given regression model
 
 # 1. Updated Helper Function to include p-values
@@ -1434,7 +1440,9 @@ print(sig_depress)
 ```
 
 
-```{r}
+```{r Displaying Residuals}
+#| echo: false
+# Displaying residuals for bmi model
 plot(model_bmi, which = 1)
 plot(model_bmi, which = 2)
 ```

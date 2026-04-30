@@ -1,0 +1,554 @@
+---
+title: "CDC BRFSS Analysis: Veteran Health"
+
+author: "Elsa Li, Amanda Louie, Anika Sharma"
+format:
+  pdf:
+    geometry:
+      - top=20mm
+      - right=20mm
+      - left=20mm
+      - bottom=20mm
+    knitr:
+      opts_chunk: 
+        out-width: "90%"
+        fig-align: "center"
+        size: "scriptsize"
+    fontsize: 10pt
+    toc: false
+    toc-params: "allowframebreaks"
+    include-in-header:
+      - text: |
+          \usepackage{etoolbox}
+          \usepackage{hyperref}
+          \usepackage{booktabs}
+          \usepackage{array}
+          \usepackage{makecell}
+          \usepackage{longtable}
+          \usepackage{float}
+          
+execute:
+  echo: false
+  warning: false
+  message: false
+  eval: true
+
+fig-align: center
+fig-height: 6
+fig-width: 8
+---
+```{r}
+#| echo: false
+library(dplyr)
+brfss = read.csv("brfss2022_m62.csv", stringsAsFactors=TRUE)
+veteran <- subset(brfss, veteran == "Yes")
+nonVeteran <- subset(brfss, veteran == "No")
+```
+
+# Introduction
+
+Veterans make up about 15.8 million people, as of 2023, as part of the US population [4]. Health policies surrounding veterans are often a political issue that needs addressing as veterans serving experience impacts their health and a lack of support and access to their health benefits when they come back from their service affects their physical and mental wellbeing. According to National Veterans Homeless Support, “During the period from 2001 to 2020, the frequency of mental health issues and substance use disorders among Veterans Health Administration (VHA) participants increased significantly, from 27.9% to 41.9%. Veterans face a heightened risk of suicide, being 1.5 times more likely than civilians” [5]. We were particularly interested in investigating and characterizing the health of veterans in depth. Hence, this report is centered around the broader issue of veteran well-being. We will use the BRFSS 2022 dataset, which is a survey of risk assessment factors conducted by the CDC in the general US population[1], to investigate veteran well-being in detail. The key categories that we will be exploring are:
+
+1. How do the demographics of the veteran population differ from the national distribution?
+2. How does veteran status affect individuals’ physical health and mental health?
+3. What are some factors that influence both mental and physical health amongst veterans?
+
+In answering these questions and henceforth further unpacking the current state of veteran well-being, we hope we can make concrete and statistically backed claims to guide policy which better supports veterans in access, equity, and welfare.
+
+
+# Demographics
+
+When thinking about veterans in the larger context of this dataset, we were first interested in exploring who the veterans in the United States are. This question is important because in order to support veteran well-being we need to first understand what their demographic background is. The first step we took was to conduct exploratory data analysis on the veteran sample within the BRFSS dataset. Some notable findings we found were that 88.6% of veterans are men, the majority race is White-only, non Hispanic — making up 81.3% of the sample, 43.1% of veterans are college graduates, and 17.2% of veterans are 80 or older.
+
+These results motivated the key guiding question: how do the demographics of veterans differ from the general population? To investigate this, we conducted a Chi-squared goodness of fit test which compared the distributions of  the demographics of veterans to that of the national distribution. By demographics, here we mean: race, education level, and income level — we conducted separate tests for each one of these. The national average data was taken from census bureau data collected in 2022 [2]. The null hypothesis for the Chi-squared goodness of fit test is that the veteran sample follows the same distribution as the national average and the alternative hypothesis is that the veteran sample does not follow the same distribution as the national average
+
+Let’s consider the assumptions of a Chi-squared test. First, we assume that there is independence between outcomes. This means that data points aren’t paired, and are independent of one another. Since the BRFSS dataset comes from a large sampled survey, we can assume random sampling where each respondent’s answers is independent of others. The second assumption is that the sample size must have at least 5 expected cases. This is true for all the demographic variables since we have $n = 42841$, so the expected counts $(n \times expected proportion)$ is always larger than 5.  The last condition is that $df  = k-1 > 1$ (where $k$ is the number of categories) which holds since we have more than 2 categories for each of our demographic variables. Hence, all the conditions are met.
+
+After conducting a  Chi-squared test, we found that in each case (race, education, and income) the results were significant at a 95% confidence level — meaning that the p-value was below 0.05.  Hence, we investigated further to see which groups differed the most using multiple 1-sample proportion tests with adjusted p-values using the Bonferroni correction. This test (along with the same independence assumption stated above) assumes that $Z ~ N(0,1)$ meaning that the Z-distribution can be approximated by the normal distribution. This is true when $np_0 \geq 10$ and $n(1-p_0) \geq 10$. Since  $n = 42841$, this condition holds for all our values of $p_0$ in each of race, education level, and income level. The results for each of the tests is shown below:
+
+```{=latex}
+\begin{table}[ht]
+\centering
+\renewcommand{\arraystretch}{0.8}
+\begin{tabular}{lrrrl}
+\toprule
+Race & \makecell{Veteran Prop.} & \makecell{National Prop.} & \makecell{p-value (adj)} & Representation \\
+\midrule
+Asian only, non-Hispanic & 0.0127 & 0.0610 & $< 2.2\mathrm{e}{-16}$ & Under \\
+Hispanic & 0.0500 & 0.1910 & $< 2.2\mathrm{e}{-16}$ & Under \\
+White only, non-Hispanic & 0.8132 & 0.5890 & $< 2.2\mathrm{e}{-16}$ & Over \\
+Black only, non-Hispanic & 0.0743 & 0.1260 & $< 2.2\mathrm{e}{-16}$ & Under \\
+American Indian or Alaskan Native only, Non-Hispanic & 0.0171 & 0.0070 & $< 2.2\mathrm{e}{-16}$ & Over \\
+Native Hawaiian or other Pacific Islander only, Non-Hispanic & 0.0063 & 0.0020 & $< 2.2\mathrm{e}{-16}$ & Over \\
+Multiracial, non-Hispanic & 0.0264 & 0.0240 & $1.16 \times 10^{-2}$ & Over \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}
+
+\textbf{Figure 1:} Results of 1-sample proportion test between the national average and the sampled veteran population for race
+
+\end{center}
+```
+
+
+```{=latex}
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{0.8}
+\begin{tabular}{lrrrl}
+\toprule
+Education & Observed\_Prop & Expected\_Prop & p\_bonferroni & Direction \\
+\midrule
+Less than high school & 0.02516292 & 0.1088911 & 0.000000e+00 & Underrepresented \\
+Bachelor's or higher & 0.42279884 & 0.3426573 & 4.203017e-262 & Overrepresented \\
+Some college / associate & 0.32483470 & 0.2847153 & 1.206677e-73 & Overrepresented \\
+High school graduate & 0.22720354 & 0.2637363 & 3.298299e-64 & Underrepresented \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}
+
+\textbf{Figure 2:} Results of 1-sample proportion test between the national average and the sampled veteran population for education level.
+
+\end{center}
+```
+
+```{=latex}
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{0.8}
+\begin{tabular}{lrrrl}
+\toprule
+Income & Observed\_Prop & Expected\_Prop & p\_bonferroni & Direction \\
+\midrule
+\$25,000 to less than \$50,000 & 0.2661385 & 0.171 & 0.000000e+00 & Overrepresented \\
+\$75,000 or more & 0.4214797 & 0.520 & 7.461731e-310 & Underrepresented \\
+\$50,000 to less than \$75,000 & 0.2022149 & 0.148 & 2.430662e-186 & Overrepresented \\
+Less than \$25,000 & 0.1101669 & 0.161 & 3.483507e-153 & Underrepresented \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}
+
+\textbf{Figure 3:} Results of 1-sample proportion test between the national average and the sampled veteran population for income level.
+
+\end{center}
+```
+
+In all of these cases, we can see that the adjusted p-values are still well under 0.05. Hence this suggests that there is statistically significant evidence that the population proportion is different from the expected value for each group. We also compute the direction of the difference: some groups are underrepresented whereas others are overrepresented. Through this we see some expected trends following our exploratory analysis. For example, the group White only-non hispanic is overrepresented. Although we also see some perhaps counterintuitive trends. For example, the group of Bachelor’s or higher education level is overrepresented, but the group earning $75k or more is underrepresented. It’s important to note also that statistical significance doesn't always translate to practical significance — particularly in a large dataset like BRFSS where very small differences could still be interpreted as statistical significance. An example of this is in the race demographic where the value we observed for Multiracial, non-Hispanic was 0.026, and what we expected was 0.024 — which practically may not be significant. 
+
+Overall however, we can conclude that  the demographics of the veteran population differ from the national population, and it motivates the next question: how might these demographic differences affect comparisons of health outcomes between veterans and non-veterans? 
+
+# Physical and Mental Health in Veterans vs. Non-Veterans
+
+We looked how being a veteran affects the likelihood of being susceptible to certain physical and mental health factors. The significance of this test determines whether we believe health policies should vary between veterans and non-veterans. In order to do this, we ran comparison tests between the proportion of veterans that experience certain physical and mental health factors as well as a two sample mean comparison test for a non-categorical factor. The results of our comparison tests are discussed in the following sections.
+
+## Physical Health Comparisons
+
+In our comparison tests, two-sample proportion z-tests and a two-sample mean comparison test, two the null hypothesis that we proposed was that the proportion of veterans that experience specific physical health factors was not different from the proportion of non-veterans who experience the same factors ($H_0: p_{veteran} = p_{nonveteran}$, $H_A: p_{veteran} \neq p_{nonveteran}$). For the category, `daysphyshlthnotgood`, participants reported the number of days in the past month where their physical health was not good and so we compared the means in this case instead.
+ 
+The assumptions we made while conducting our comparison tests were that the veterans and non-veterans datasets are independent and individual people are independent from each other. These conditions are both satisfied since being a veteran is independent of being a non-veteran and each participant in the dataset answered the survey independent of each other. Another assumption that our proportion comparison tests made was that the success–failure condition, $np ≥ 10$ and $n(1-p) ≥ 10$, was satisfied. For this dataset and proportions the success-failure condition was satisfied since for all of the proportions used in this test multiplying the proportion and 1 minus the proportion by the sample size, as determined in section 1, would result in a number larger than 10. An additional assumption our mean comparison test made was that the sample means were normally distributed among veterans which is satisfied by the Central Limit Theorem and the sizes of each dataset as defined in section 1, leading us to conclude that the sample means are normally distributed. We also assumed that non-veterans and that the datasets had equal variances which we checked by plotting a histogram of the `daysphyshlthnotgood` for veteran and non-veterans and got the following plots with similar spread of data, which led us to believe that the variances were equal. In our initial testing, we conducted our two-sample t-tests with equal and unequal variances and found that we came to the same conclusion about the significance of any difference in the means through both tests.
+
+```{r}
+#| echo: false
+#| fig-width: 12
+#| fig-height: 4
+
+veteranDaysphyshlthnotgoodClean <- veteran %>% filter(!is.na(daysphyshlthnotgood))
+nonVeteranDaysphyshlthnotgoodClean <- nonVeteran %>% filter(!is.na(daysphyshlthnotgood))
+
+par(mfrow = c(1,2))
+
+hist(veteranDaysphyshlthnotgoodClean$daysphyshlthnotgood,
+     main = "Days Physical Health Not Good (Veteran)",
+     xlab = "Days in past month phys. health not good")
+hist(nonVeteranDaysphyshlthnotgoodClean$daysphyshlthnotgood,
+     main = "Days Physical Health Not Good (Non-Veterans)",
+     xlab = "Days in past month phys. health not good")
+```
+
+```{=latex}
+\begin{center}
+\textbf{Figure 4:} Histograms of the distribution of `daysphyshlthnotgood` in veterans and non-veterans to visualize variance among datasets
+\end{center}
+```
+
+The results of our comparison tests are summarized in the table below.
+
+```{=latex}
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{0.8}
+\begin{tabular}{lccc}
+\toprule
+Factor & Veteran & Non-Veteran & $p$-value \\
+\midrule
+Arthritis & 0.4356422 & 0.3455287 & $< 2.2 \times 10^{-16}$ \\
+Heart Disease & 0.1244373 & 0.0543102 & $< 2.2 \times 10^{-16}$ \\
+Cancer & 0.1789827 & 0.1105903 & $< 2.2 \times 10^{-16}$ \\
+Diabetes & 0.1962027 & 0.1340290 & $< 2.2 \times 10^{-16}$ \\
+COPD & 0.11969946 & 0.07724301 & $< 2.2 \times 10^{-16}$ \\
+Days Physical Health Not Good & 4.972634 & 4.338173 & $< 2.2 \times 10^{-16}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}
+\textbf{Figure 5:} Results of comparison tests between veterans and non-veterans on different physical health factors
+\end{center}
+```
+
+From these comparison tests, we can conclude that there is a significant difference in the proportions (and mean) of these physical health factors present in veterans versus non-veterans. All of our comparison tests resulted in a p-value less than $2.2 \times 10^-16$, which indicates that we would reject our null hypothesis that the proportions or means are equal. We notice that in general the proportion of veterans who are diagnosed with these physical health factors is greater than the proportion of non-veterans diagnosed with the same physical health factors. We can visualize this difference in this barplot that compares the different proportions among veterans and non-veterans.
+
+
+```{r}
+#| echo: false
+#| fig-width: 12
+#| fig-height: 4
+# generated with help from gemini
+
+# Your vectors
+labels_a <- c("Arthritis", "Heart Disease", "Cancer", "Diabetes", "COPD")
+prop_vet <- c(0.4356422, 0.1244373, 0.1789827, 0.1962027, 0.11969946)
+prop_nonVet <- c(0.3455287, 0.0543102, 0.1105903, 0.1340290, 0.07724301)
+
+# Combine into a matrix
+data_matrix_a <- rbind(prop_vet, prop_nonVet)
+
+# Assign column names to the matrix
+colnames(data_matrix_a) <- labels_a
+
+# Your vectors
+labels_b <- c("daysphyshlthnotgood")
+mean_vet <- c(4.972634)
+mean_nonVet <- c(4.338173)
+
+# Combine into a matrix
+data_matrix_b <- rbind(mean_vet, mean_nonVet)
+
+# Assign column names to the matrix
+colnames(data_matrix_b) <- labels_b
+
+# Create the grouped barplot
+# Adjust margins so the long label fits (bottom, left, top, right)
+par(mfrow=c(1,2))
+
+barplot(data_matrix_a, 
+        beside = TRUE,                   # This places the bars side-by-side
+        col = c("skyblue", "salmon"),    # Colors for the two groups
+        legend.text = c("Veteran", "Non-Veteran"),
+        args.legend = list(x = "topright", bty = "n"),
+        main = "Health Indicators: ",
+        ylab = "Value",
+        las = 1,                         # Rotates x-axis labels to be vertical
+        cex.names = 0.8)                 # Shrinks the label text slightly
+
+barplot(data_matrix_b, 
+        beside = TRUE,                   # This places the bars side-by-side
+        col = c("skyblue", "salmon"),    # Colors for the two groups
+        legend.text = c("Veteran", "Non-Veteran"),
+        args.legend = list(x = "topright", bty = "n"),
+        main = "Veterans vs Non-Veterans",
+        ylab = "Value",
+        las = 1,                         # Rotates x-axis labels to be vertical
+        cex.names = 0.8)                 # Shrinks the label text slightly
+```
+
+```{=latex}
+\textbf{Figure 6:} Summary of differences in proportions between veterans and non-veterans on different physical health factors
+```
+
+## Mental Health Comparisons
+
+We proposed was the same comparison tests for mental health as for physical health factors $(H_0: p_{veteran} = p_{nonveteran}, H_A: p_{veteran} \neq p_{nonveteran})$. The assumptions made in the proportion and mean comparison test were the same and verified the same way. To verify that the datasets had equal variances we plotted a histogram of the `daysmenthlthnotgood` for veteran and non-veterans and got plots with similar spread of data, which led us to believe that the variances were equal. In our initial testing, we conducted our two-sample t-tests with equal and unequal variances and found that we came to the same conclusion about the significance of any difference in the means through both tests.
+
+```{r}
+#| echo: false
+#| fig-width: 12
+#| fig-height: 4
+
+veteranDaysmenthlthnotgoodClean <- veteran %>% filter(!is.na(daysmenthlthnotgood))
+nonVeteranDaysmenthlthnotgoodClean <- nonVeteran %>% filter(!is.na(daysmenthlthnotgood))
+
+par(mfrow = c(1,2))
+
+hist(veteranDaysmenthlthnotgoodClean$daysmenthlthnotgood,
+     main = "Days Mental Health Not Good (Veteran)",
+     xlab = "Number of days in past month mental health was not good")
+hist(nonVeteranDaysmenthlthnotgoodClean$daysmenthlthnotgood,
+     main = "Days Mental Health Not Good (Non-Veteran)",
+     xlab = "Number of days in past month mental health was not good")
+```
+
+```{=latex}
+\begin{center}
+\textbf{Figure 7:} Histograms of the distribution of “daysmenthlthnotgood” in veterans and non-veterans to visualize variance among datasets
+\end{center}
+```
+
+The results of our comparison tests are summarized in the table below.
+
+```{=latex}
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{0.8}
+\begin{tabular}{lccc}
+\toprule
+Factor & Veteran & Non-Veteran & $p$-value \\
+\midrule
+Depression & 0.1757344 & 0.2166535 & $< 2.2 \times 10^{-16}$ \\
+Days Mental Health Not Good & 3.517690 & 4.462462 & $< 2.2 \times 10^{-16}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{center}
+\textbf{Figure 8:} Summary of differences in proportions between veterans and non-veterans on different mental health factors
+\end{center}
+```
+
+Similarly to physical health, from these tests we can conclude that there is a significant difference in the proportion of veterans and the proportion of non-veterans who have been diagnosed with a depressive disorder. Each of our comparison tests resulted in a p-value less than $2.2 \times 10^-16$, which indicates that we would reject our null hypothesis that the proportions or means are the same. We can notice that in general, unlike with the physical health factors, the proportion of veterans who are diagnosed with a depressive disorder is less than the proportion of non-veterans diagnosed with a depressive disorder. We can visualize this difference in this barplot that compares the different proportions among veterans and non-veterans.
+
+```{r}
+#| echo: false
+#| fig-width: 12
+#| fig-height: 4
+# generated with help from gemini
+
+# Your vectors
+labels_a <- c("Depression")
+prop_vet <- c(0.1757344)
+prop_nonVet <- c(0.2166535)
+
+# Combine into a matrix
+data_matrix_a <- rbind(prop_vet, prop_nonVet)
+
+# Assign column names to the matrix
+colnames(data_matrix_a) <- labels_a
+
+# Your vectors
+labels_b <- c("daysmenthlthnotgood")
+mean_vet <- c(3.517690)
+mean_nonVet <- c(4.462462)
+
+# Combine into a matrix
+data_matrix_b <- rbind(mean_vet, mean_nonVet)
+
+# Assign column names to the matrix
+colnames(data_matrix_b) <- labels_b
+
+# Create the grouped barplot
+# Adjust margins so the long label fits (bottom, left, top, right)
+par(mfrow=c(1,2))
+
+barplot(data_matrix_a, 
+        beside = TRUE,                   # This places the bars side-by-side
+        col = c("skyblue", "salmon"),    # Colors for the two groups
+        legend.text = c("Veteran", "Non-Veteran"),
+        args.legend = list(x = "topright", bty = "n"),
+        main = "Health Indicators: ",
+        ylab = "Value",
+        las = 1,                         # Rotates x-axis labels to be vertical
+        cex.names = 0.8)                 # Shrinks the label text slightly
+
+barplot(data_matrix_b, 
+        beside = TRUE,                   # This places the bars side-by-side
+        col = c("skyblue", "salmon"),    # Colors for the two groups
+        legend.text = c("Veteran", "Non-Veteran"),
+        args.legend = list(x = "topright", bty = "n"),
+        main = "Veterans vs Non-Veterans",
+        ylab = "Value",
+        las = 1,                         # Rotates x-axis labels to be vertical
+        cex.names = 0.8)                 # Shrinks the label text slightly
+```
+
+```{=latex}
+\begin{center}
+\textbf{Figure 9:} Summary of differences in proportions between veterans and non-veterans on different mental health factors
+\end{center}
+```
+
+# Factors Affecting Physical and Mental Health of Veterans
+
+For the physical health of veterans, we were most interested in finding the factors that significantly predict the likelihood of cancer, heart disease, diabetes, and BMI. Cancer, heart disease, and diabetes are all binary variables, so we created a logistic regression model to predict the likelihood of a person having that disease given some predictors that we choose. Since BMI is a numerical variable, we decided that a multiple linear regression model based on a set of preselected predictors was a better choice for this variable. 
+
+The null hypothesis for both the logistic regressions and the linear regression are the same: for each predictor $x_i$, the corresponding $beta_i = 0$, where $beta_i$ is the coefficient to $x_i$,  in the regression model. The alternative hypothesis for the regression models is also the same: There is at least one predictor $x_i$, for which the corresponding $beta_i \neq 0$, where $beta_i$ is the coefficient to $x_i$,  in the regression model. 
+
+To narrow down predictors for each model, we choose a set of predictors that we believed would most significantly attribute to whatever the model was trying to predict. Although we could have used the stepwise function to eliminate those predictors that were not significant for predicting depressive disorder, we decided against doing so. This is because $p$-values and confidence intervals are no longer valid after running the stepwise selection function, and we wanted to interpret the model using these features of the output.  
+
+For heart disease, cancer, and diabetes, our chosen set of predictors was `sex`, `bmi`, `income`, `daysphyshlthnotgood`, `anyexer`, `race`, `age`, `bingedrinker`, and `weeklydrinks`. For BMI, our set was the same as the previously mentioned set, just without the bmi predictor. 
+
+We can begin with the results for our physical health models, starting with heart disease. Note that we are only displaying the predictors that had a significant p-value at a confidence level of 99%. Since we’re using so many predictors, we decided to use this higher confidence level to make sure that we were not including predictors that Some interesting results we observed using the coefficient and calculated odds ratio is that age, sex, COPD, and race seem to be especially significant factors contributing to the likelihood of a veteran having heart disease. For instance, keeping all other predictors constant, the odds of a male veteran having cancer is about 2.17 times higher to that of a female veteran.
+
+```{=latex}
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{0.8}
+\begin{tabular}{l r r r}
+\toprule
+\textbf{Heart Disease Predictor} & Coefficient & p\_value & Odds\_Ratio \\
+\midrule
+(Intercept) & -4.38642908 & 4.013387e-98 & 0.01244509 \\
+sexMale & 0.792060533 & 1.024079e-20 & 2.20794128 \\
+bmi & 0.019986045 & 5.006199e-10 & 1.02018710 \\
+incomelow income & 0.260128207 & 3.946487e-04 & 1.29709637 \\
+daysphyshlthnotgood & 0.035645406 & 1.904157e-108 & 1.03628832 \\
+anyexerYes & -0.161407711 & 5.498495e-05 & 0.85094506 \\
+raceNative Hawaiian or other Pacific Islander only, Non-Hispanic & 0.734933957 & 3.239353e-03 & 2.08534426 \\
+agesenior & 1.213509429 & 3.009473e-139 & 3.36527414 \\
+ageyoung adult & -2.288625819 & 2.012844e-20 & 0.10140572 \\
+bingedrinkerYes & -0.266958823 & 9.957157e-04 & 0.76570460 \\
+weeklydrinks & -0.007850541 & 8.547345e-03 & 0.99218019 \\
+\bottomrule
+\end{tabular}
+\end{table}
+```
+
+For cancer, we note that some interesting results are that being a senior was again an especially important  for predicting cancer, as it raised the odds of a senior having cancer was about 3.54 times more likely than the other two age groups, when keeping all other predictors constant. 
+
+```{=latex}
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{0.8}
+\begin{tabular}{l r r r}
+\toprule
+\textbf{Cancer Predictor} & Coefficient & p\_value & Odds\_Ratio \\
+\midrule
+(Intercept) & -2.05949908 & 3.062683e-32 & 0.1275178 \\
+bmi & -0.01178735 & 6.016229e-05 & 0.9882819 \\
+daysphyshlthnotgood & 0.02230068 & 1.145559e-48 & 1.0225512 \\
+raceAsian only, non-Hispanic & -0.96748135 & 1.135689e-04 & 0.3800390 \\
+raceNative Hawaiian or other Pacific Islander only, Non-Hispanic & -0.84266246 & 8.530404e-03 & 0.4305626 \\
+agesenior & 1.29886868 & 4.301601e-218 & 3.6651479 \\
+ageyoung adult & -1.30378827 & 5.951748e-25 & 0.2715013 \\
+bingedrinkerYes & -0.26293938 & 2.765505e-05 & 0.7687885 \\
+incomelow income & -0.20822175 & 4.168322e-04 & 0.8120270 \\
+\bottomrule
+\end{tabular}
+\end{table}
+```
+
+Once again, being a senior was a significant contributor to having diabetes. Additionally, being a Native Hawaiian or other Pacific Islander increased a participating veteran’s odds of having diabetes by about 2.06 times versus the other race groups, when keeping all other predictors constant. 
+
+```{=latex}
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{0.8}
+\begin{tabular}{l r r r}
+\toprule
+\textbf{Diabetes Predictor} & Coefficient & p\_value & Odds\_Ratio \\
+\midrule
+(Intercept) & -4.12867117 & 1.621600e-163 & 0.01610426 \\
+sexMale & 0.27770901 & 7.943496e-08 & 1.32010200 \\
+bmi & 0.08504697 & 9.444434e-231 & 1.08876820 \\
+incomelow income & 0.49767276 & 1.200174e-17 & 1.64488876 \\
+incomemedium income & 0.33574331 & 2.009492e-10 & 1.39897988 \\
+daysphyshlthnotgood & 0.02106108 & 1.014779e-49 & 1.02128443 \\
+anyexerYes & -0.31544124 & 1.872981e-22 & 0.72946694 \\
+raceWhite only, non-Hispanic & -0.46673033 & 6.689181e-06 & 0.62704916 \\
+agesenior & 0.71502632 & 1.050895e-99 & 2.04424049 \\
+ageyoung adult & -1.92191276 & 1.329479e-68 & 0.14632681 \\
+bingedrinkerYes & -0.17608202 & 4.016712e-03 & 0.83854920 \\
+weeklydrinks & -0.02152995 & 8.962312e-15 & 0.97870016 \\
+\bottomrule
+\end{tabular}
+\end{table}
+```
+
+Again, being a senior or being a Native Hawaiian or other Pacific Islander increased a participating veteran’s odds of having higher BMI, when holding all other predictors constant. 
+
+```{=latex}
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{0.8}
+\begin{tabular}{l r r r}
+\toprule
+\textbf{BMI Predictor} & Coefficient & p\_value \\
+\midrule
+(Intercept) & 30.12243076 & 0.000000e+00 \\
+sexMale & 0.56097102 & 9.141508e-09 \\
+incomemedium income & 0.48776886 & 3.405469e-07 \\
+daysphyshlthnotgood & 0.03424263 & 6.825168e-25 \\
+anyexerYes & -1.37618927 & 4.720291e-79 \\
+raceAsian only, non-Hispanic & -2.28341981 & 1.025350e-10 \\
+raceNative Hawaiian or other Pacific Islander only, Non-Hispanic & 1.17344661 & 6.020705e-03 \\
+agesenior & -1.91438463 & 7.577215e-169 \\
+ageyoung adult & -1.12871124 & 3.885129e-25 \\
+bingedrinkerYes & 0.39288963 & 1.166726e-04 \\
+weeklydrinks & -0.02268569 & 1.660973e-13 \\
+\bottomrule
+\end{tabular}
+\end{table}
+```
+
+We can conclude by checking the assumptions for the logistic regression model. First, we assume that the observations in our dataset are independent. Since this BRFSS dataset is made up of randomly chosen respondents from all over the United States, we can assume that the veterans in the dataset are all independent of each other as well. The total number of veterans in the brfss dataset is 42841, and the number of veterans is also greater than 32000 within each of the factors we examined, so our sample size is sufficiently large. Lastly, we also assume that the logistic odds of success are linear in the predictors. Since this is more difficult to check because residuals are not a good way of testing for this, we will make this assumption without statistically validating it. 
+
+Next, we can check the assumptions for the multiple linear regression model. Our assumptions are that the linear model holds, the errors are independent of each other, and the sample mean error is normally distributed. From the residual plots in Fig. 14, we can see that our assumption does not hold, since there seems to be a lot more residuals above the red line, and most residuals are clustered towards higher fitted values. From the Q-Q plot, we can see a distinct right tail, which also suggests that residuals are not normally distributed. Therefore, we must interpret any final output of the linear model with caution. 
+
+```{r}
+#| echo: false
+#| fig-width: 12
+#| fig-height: 4
+
+# Two lines below generated by Gemini, prompt was that given these columns, drop any rows where any of these columns are NA
+# Define the variables of interest
+vars <- c("heartdisease", "sex", "bmi", "cancer", "copd", 
+          "daysphyshlthnotgood", "anyexer", "race", 
+          "age", "bingedrinker", "weeklydrinks", "heartdisease")
+
+# Subset rows where all specified columns are non-NA
+veteran_physical <- veteran[complete.cases(veteran[, vars]), ]
+
+model_bmi <- lm(formula = bmi ~ sex + copd +
+                 daysphyshlthnotgood + anyexer + race +
+                 age + bingedrinker + weeklydrinks , data=veteran_physical)
+
+par(mfrow = c(1,2))
+plot(model_bmi, which = 1)
+plot(model_bmi, which = 2)
+```
+
+# Factors Affecting Mental Health
+
+For the mental health of veterans, we decided to focus on whether or not they have been told that they have a depressive disorder. Similar to how we conducted the data analysis, we ran a logistic regression model with some preselected predictors. This time, we chose our predictors to be `sex`, `income`, `race`,  `age`, `bingedrinker`,  `weeklydrinks`, `daysmenthlthnotgood`, and `anyexer`. From the results of the model, we can see that lower income veterans were around 1.9 times more likely to have been told that they have a depressive disorder than other income brackets, holding all other predictors constant. 
+
+```{=latex}
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{0.8}
+\begin{tabular}{l r r r}
+\toprule
+\textbf{Depression Predictor} & Coefficient & p\_value & Odds\_Ratio \\
+\midrule
+(Intercept) & -1.2856906 & 9.250189e-21 & 0.2764596 \\
+sexMale & -0.8586733 & 6.026534e-85 & 0.4237238 \\
+incomelow income & 0.6356814 & 2.922495e-23 & 1.8883083 \\
+incomemedium income & 0.3306027 & 7.745822e-09 & 1.3918067 \\
+daysmenthlthnotgood & 0.1072040 & 0.000000e+00 & 1.1131613 \\
+anyexerYes & -0.2058627 & 5.118803e-08 & 0.8139448 \\
+agesenior & -0.5226292 & 1.694792e-44 & 0.5929595 \\
+\bottomrule
+\end{tabular}
+\end{table}
+```
+
+Lastly, we can verify our assumptions about this model. Since this is just a logistic regression model, the same assumptions about sample size and logistic odds of success being linear in the predictors hold. 
+
+# Conclusions and Recommendations
+
+From the results of all of the above models we gain a number of key insights. From the initial demographic section we learned that the demographics of veterans are statistically different from the general US population in income, education and race. Certain races (Black, Hispanic, and Asians) were underrepresented in the veteran population, whilst others are overrepresented — such as White-only non-Hispanic. This could inform health policy and staff to be more prepared for diseases which put certain races at higher-risk than others.
+
+In the second section, we unpacked how given a particular health factor, the difference in  proportion of veterans and non-veteran who have it is statistically significant. In particular, for physical health factors (heart disease, diabetes, cancer, BMI), we found that veterans are more likely to have the factor. Whereas, for depression, non-veterans are more likely to have it. Hence, this could inform health policy to guide more targeted attention for the physical health of veterans through prevention and holistic well-being support. In contrast, the mental health policies should remain broad and be catered to both the general population and veterans.
+
+In the last section, we further examined the factors that impact veterans’ physical and mental health. An unsurprising result is that being a senior almost always increases a veteran’s odds of health issues the most. Additionally, we repeatedly found that being a Native Hawaiian or other Pacific Islander increased odds of having multiple health conditions. We also found that for mental health issues, lower income veterans were more likely to have been told that they have a depressive disorder. Therefore, we suggest allocating more physical health resources to the older veteran and Native Hawaiian and other Pacific Islander population, and allocate more mental health resources to lower income veteran communities. 
+
+
+
+
+
+
+
