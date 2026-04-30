@@ -47,24 +47,24 @@ nonVeteran <- subset(brfss, veteran == "No")
 
 # Introduction
 
-Veterans make up about 15.8 million people, as of 2023, as part of the US population [4]. Health policies surrounding veterans are often a political issue that needs addressing as veterans serving experience impacts their health and a lack of support and access to their health benefits when they come back from their service affects their physical and mental wellbeing. According to National Veterans Homeless Support, “During the period from 2001 to 2020, the frequency of mental health issues and substance use disorders among Veterans Health Administration (VHA) participants increased significantly, from 27.9% to 41.9%. Veterans face a heightened risk of suicide, being 1.5 times more likely than civilians” [5]. We were particularly interested in investigating and characterizing the health of veterans in depth. Hence, this report is centered around the broader issue of veteran well-being. We will use the BRFSS 2022 dataset, which is a survey of risk assessment factors conducted by the CDC in the general US population[1], to investigate veteran well-being in detail. The key categories that we will be exploring are:
+Veterans make up about 15.8 million people, as of 2023, as part of the US population (US Census Bureau 2022). Health policies surrounding veterans are often a political issue that needs addressing as veterans serving experience impacts their health and a lack of support and access to their health benefits when they come back from their service affects their physical and mental wellbeing. According to National Veterans Homeless Support, “During the period from 2001 to 2020, the frequency of mental health issues and substance use disorders among Veterans Health Administration (VHA) participants increased significantly, from 27.9% to 41.9%. Veterans face a heightened risk of suicide, being 1.5 times more likely than civilians” (NVHS). We were particularly interested in investigating and characterizing the health of veterans in depth. Hence, this report is centered around the broader issue of veteran well-being. We will use the BRFSS 2022 dataset, which is a survey of risk assessment factors conducted by the CDC in the general US population (CDC 2022), to investigate veteran well-being in detail. The key categories that we will be exploring are:
 
 1. How do the demographics of the veteran population differ from the national distribution?
-2. How does veteran status affect individuals’ physical health and mental health?
+2. How is veteran status associated with individuals’ physical health and mental health?
 3. What are some factors that influence both mental and physical health amongst veterans?
 
-In answering these questions and henceforth further unpacking the current state of veteran well-being, we hope we can make concrete and statistically backed claims to guide policy which better supports veterans in access, equity, and welfare.
+In answering these questions and henceforth further unpacking the current state of veteran well-being, we hope we can make concrete and statistically backed claims to guide policy which better supports veterans in access, equity, and welfare. Note that all the claims and analysis we make are based on this BRFSS dataset only, and should not be extrapolated beyond without further statistical analysis.
 
 
 # Demographics
 
 When thinking about veterans in the larger context of this dataset, we were first interested in exploring *who* the veterans in the United States are. This question is important because in order to support veteran well-being we need to first understand what their demographic background is. The first step we took was to conduct exploratory data analysis on the veteran sample within the BRFSS dataset. Some notable findings we found were that 88.6% of veterans are men, the majority race is White-only, non Hispanic — making up 81.3% of the sample, 43.1% of veterans are college graduates, and 17.2% of veterans are 80 or older.
 
-These results motivated the key guiding question: how do the demographics of veterans differ from the general population? To investigate this, we conducted a Chi-squared goodness of fit test which compared the distributions of the demographics of veterans to that of the national distribution. By demographics, here we mean: race, education level, and income level — we conducted separate tests for each one of these. The national average data was taken from census bureau data collected in 2022 [2]. The null hypothesis for the Chi-squared goodness of fit test is that the veteran sample follows the same distribution as the national average and the alternative hypothesis is that the veteran sample does not follow the same distribution as the national average
+These results motivated the key guiding question: how do the demographics of veterans differ from the general population? To investigate this, we conducted a Chi-squared goodness of fit test which compared the distributions of the demographics of veterans to that of the national distribution. By demographics, here we chose to include: race, education level, and income level — we conducted separate tests for each one of these. The national average data was taken from census bureau data collected in 2022 (USAFacts 2026). The null hypothesis for the Chi-squared goodness of fit test is that the veteran sample follows the same distribution as the national average and the alternative hypothesis is that the veteran sample does not follow the same distribution as the national average.
 
-Let’s consider the assumptions of a Chi-squared test. First, we assume that there is independence between outcomes. This means that data points aren’t paired, and are independent of one another. Since the BRFSS dataset comes from a large sampled survey, we can assume random sampling where each respondent’s answers is independent of others. The second assumption is that the sample size must have at least 5 expected cases. This is true for all the demographic variables since we have $n = 42841$, so the expected counts $(n \times expected proportion)$ is always larger than 5.  The last condition is that $df  = k-1 > 1$ (where $k$ is the number of categories) which holds since we have more than 2 categories for each of our demographic variables. Hence, all the conditions are met.
+Let’s consider the assumptions of a Chi-squared test. First, we assume that there is independence between outcomes. This means that data points aren’t paired, and are independent of one another. Since the BRFSS dataset comes from a large sampled survey, we can assume random sampling where each respondent’s answers is independent of others. The second assumption is that the sample size must have at least 5 expected cases. This is true for all the demographic variables since we have $n = 42841$, so the expected counts $(n \times$ expected proportion). is always larger than 5.  The last condition is that $df  = k-1 > 1$ (where $k$ is the number of categories) which holds since we have more than 2 categories for each of our demographic variables. Hence, all the conditions are met.
 
-After conducting a Chi-squared test, we found that in each case (race, education, and income) the results were significant at a 95% confidence level — meaning that the p-value was below 0.05.  Hence, we investigated further to see which groups differed the most using multiple 1-sample proportion tests with adjusted p-values using the Bonferroni correction. This test (along with the same independence assumption stated above) assumes that $Z ~ N(0,1)$ meaning that the Z-distribution can be approximated by the normal distribution. This is true when $np_0 \geq 10$ and $n(1-p_0) \geq 10$. Since  $n = 42841$, this condition holds for all our values of $p_0$ in each of race, education level, and income level. The results for each of the tests is shown below:
+After conducting a Chi-squared test, we found that in each case (race, education, and income) the results were significant at a 95% confidence level — meaning that the p-value was below 0.05.  Hence, we investigated further to see which groups differed the most using multiple 1-sample proportion tests with adjusted p-values using the Bonferroni correction. This test (along with the same independence assumption stated above) assumes that $Z \sim N(0,1)$ meaning that the Z-distribution can be approximated by the normal distribution. This is true when $np_0 \geq 10$ and $n(1-p_0) \geq 10$. Since  $n = 42841$, this condition holds for all our values of $p_0$ in each of race, education level, and income level. The results for each of the tests is shown below:
 
 ```{=latex}
 \begin{table}[h]
@@ -87,7 +87,7 @@ Multiracial, non-Hispanic & 0.0264 & 0.0240 & $1.16 \times 10^{-2}$ & Overrepres
 
 \begin{center}
 
-\textbf{Figure 1:} Results of 1-sample proportion test between the national average and the sampled veteran population for race
+\textbf{Figure 1:} 1-sample proportion test between the national average and the sampled veteran population (race)
 
 \end{center}
 ```
@@ -111,7 +111,7 @@ High school graduate & 0.22720354 & 0.2637363 & 3.298299e-64 & Underrepresented 
 
 \begin{center}
 
-\textbf{Figure 2:} Results of 1-sample proportion test between the national average and the sampled veteran population for education level.
+\textbf{Figure 2:} 1-sample proportion test between the national average and the sampled veteran population (education)
 
 \end{center}
 ```
@@ -134,12 +134,12 @@ Less than \$25,000 & 0.1101669 & 0.161 & 3.483507e-153 & Underrepresented \\
 
 \begin{center}
 
-\textbf{Figure 3:} Results of 1-sample proportion test between the national average and the sampled veteran population for income level.
+\textbf{Figure 3:} 1-sample proportion test between the national average and the sampled veteran population (income level).
 
 \end{center}
 ```
 
-In all of these cases, we can see that the adjusted p-values are still well under 0.05. Hence this suggests that there is statistically significant evidence that the population proportion is different from the expected value for each group. We also compute the direction of the difference: some groups are underrepresented whereas others are overrepresented. Through this we see some expected trends following our exploratory analysis. For example, the group White only-non hispanic is overrepresented. Although we also see some perhaps counterintuitive trends. For example, the group of Bachelor’s or higher education level is overrepresented, but the group earning $75k or more is underrepresented. It’s important to note also that statistical significance doesn't always translate to practical significance. An example of this is in the race demographic where the value we observed for Multiracial, non-Hispanic was 0.026, and what we expected was 0.024 — which practically may not be significant. 
+In all of these cases, we can see that the adjusted p-values are still well under 0.05. Hence this suggests that there is statistically significant evidence that the population proportion is different from the expected value for each group. We also compute the direction of the difference: some groups are underrepresented whereas others are overrepresented. Through this we see some expected trends following our exploratory analysis. For example, the group White only-non hispanic is overrepresented. Although we also see some perhaps counterintuitive trends. For example, the group of Bachelor’s or higher education level is overrepresented, but the group earning $75k or more is underrepresented. It’s important to note also that statistical significance doesn't always translate to practical significance. An example of this is in the race demographic where the value we observed for Multiracial, non-Hispanic was 0.026, and what we expected was 0.024 — which practically may not be significant. Also, since the sampled veteran population is skewed in terms of some demographic factors (Eg: veterans in this dataset are much older than the general population), the comparison to the entire US population data should be treated with caution.
 
 Overall, we can conclude that the demographics of the veteran population differ from the national population, and it motivates the next question: how might these demographic differences affect comparisons of health outcomes between veterans and non-veterans? 
 
@@ -177,7 +177,7 @@ hist(nonVeteranDaysphyshlthnotgoodClean$daysphyshlthnotgood,
 \end{center}
 ```
 
-The results of our comparison tests are summarized in the table below.
+The results of our t-tests are summarized in the table below.
 
 ```{=latex}
 \begin{table}[h]
@@ -272,7 +272,7 @@ par(mfrow = c(1, 1))
 ```
 
 ```{=latex}
-\textbf{Figure 6:} Summary of differences in proportions between veterans and non-veterans on different physical health factors
+\textbf{Figure 6:} Differences in proportions between veterans and non-veterans on different physical health factors
 ```
 
 ## Mental Health Comparisons
@@ -320,7 +320,7 @@ Days Mental Health Not Good & 3.517690 & 4.462462 & $< 2.2 \times 10^{-16}$ \\
 \end{table}
 
 \begin{center}
-\textbf{Figure 8:} Summary of differences in proportions between veterans and non-veterans on different mental health factors
+\textbf{Figure 8:} Differences in proportions between veterans and non-veterans on different mental health factors
 \end{center}
 ```
 
@@ -393,17 +393,17 @@ par(mfrow = c(1, 1))
 
 ```{=latex}
 \begin{center}
-\textbf{Figure 9:} Summary of differences in proportions between veterans and non-veterans on different mental health factors
+\textbf{Figure 9:} Differences in proportions between veterans and non-veterans on different mental health factors
 \end{center}
 ```
 
 # Factors Affecting Physical and Mental Health of Veterans
 
-Within the veteran population, we were interested in finding out what makes veterans prone to poor mental and physical health, which would inform measures to support veteran wellbeing effectively. For the physical health of veterans, we were most interested in finding the factors that significantly predict the likelihood of cancer, heart disease, diabetes, and BMI. Cancer, heart disease, and diabetes are all binary variables, so we modeled them using logistic regression. Since BMI is a numerical variable, we modelled it using a multiple linear regression model. The null hypothesis for both the logistic regressions and the linear regression are the same: for each predictor $x_i$, the corresponding $beta_i = 0$, where $beta_i$ is the coefficient to $x_i$,  in the regression model. The alternative hypothesis for the regression models is also the same: There is at least one predictor $x_i$, for which the corresponding $beta_i \neq 0$, where $beta_i$ is the coefficient to $x_i$, in the regression model. 
+Within the veteran population, we were interested in finding out what makes veterans prone to poor mental and physical health, which would inform measures to support veteran wellbeing effectively. For the physical health of veterans, we were most interested in finding the factors that significantly predict the likelihood of cancer, heart disease, diabetes, and BMI. Cancer, heart disease, and diabetes are all binary variables, so we modeled them using logistic regression. Since BMI is a numerical variable, we modelled it using a multiple linear regression model. The null hypothesis for both the logistic regressions and the linear regression are the same: for each predictor $x_i$, the corresponding $\beta_i = 0$, where $\beta_i$ is the coefficient to $x_i$,  in the regression model. The alternative hypothesis for the regression models is also the same: There is at least one predictor $x_i$, for which the corresponding $\beta_i \neq 0$, where $\beta_i$ is the coefficient to $x_i$, in the regression model. 
 
 To narrow down predictors for each model, we choose a set of predictors that we believed would most significantly attribute to whatever the model was trying to predict. Although we could have used the stepwise function to eliminate those predictors that were not significant for predicting depressive disorder, we decided against doing so. This is because p-values and confidence intervals may no longer be valid after running the stepwise selection function, and we wanted to interpret the model using these features of the output. Additionally, we modified the age column to consolidate age into either young adult, middle age, and senior, and the income columns into either low, middle, or high income. For heart disease, cancer, and diabetes, our chosen set of predictors was `sex`, `bmi`, `income`, `daysphyshlthnotgood`, `anyexer`, `race`, `age`, `bingedrinker`, and `weeklydrinks`. For BMI, our set was the same just without the BMI predictor. 
 
-We can begin with the results for our physical health models, starting with heart disease. Note that we are only displaying the predictors that had a significant p-value at a confidence level of 99%. Since we’re using so many predictors, we decided to use this higher confidence level. One interesting result we observe here is that, keeping all other predictors constant, the odds of a male veteran having cancer is about 2.17 times higher to that of a female veteran. 
+We can begin with the results for our physical health models, starting with heart disease. Note that we are only displaying the predictors that had a significant adjusted p-value based on the Bonferroni correction. Since we’re using so many predictors, we decided to use this higher confidence level. One interesting result we observe here is that, keeping all other predictors constant, the odds of a male veteran having heart disease is about 2.23 times higher to that of a female veteran. 
 
 ```{=latex}
 \begin{table}[h]
@@ -413,23 +413,23 @@ We can begin with the results for our physical health models, starting with hear
 \toprule
 \textbf{Heart Disease Predictor} & Coefficient & p\_value & Odds\_Ratio \\
 \midrule
-(Intercept) & -4.38642908 & 4.013387e-98 & 0.01244509 \\
-sexMale & 0.792060533 & 1.024079e-20 & 2.20794128 \\
-bmi & 0.019986045 & 5.006199e-10 & 1.02018710 \\
-incomelow income & 0.260128207 & 3.946487e-04 & 1.29709637 \\
-daysphyshlthnotgood & 0.035645406 & 1.904157e-108 & 1.03628832 \\
-anyexerYes & -0.161407711 & 5.498495e-05 & 0.85094506 \\
-raceNative Hawaiian or other Pacific Islander only, Non-Hispanic & 0.734933957 & 3.239353e-03 & 2.08534426 \\
-agesenior & 1.213509429 & 3.009473e-139 & 3.36527414 \\
-ageyoung adult & -2.288625819 & 2.012844e-20 & 0.10140572 \\
-bingedrinkerYes & -0.266958823 & 9.957157e-04 & 0.76570460 \\
-weeklydrinks & -0.007850541 & 8.547345e-03 & 0.99218019 \\
+(Intercept) & -4.38013938 & 1.030130e-94 & 0.01252361 \\
+sexMale & 0.80261851 & 3.610160e-20 & 2.23137617 \\
+bmi & 0.02059709 & 3.387576e-10 & 1.02081067 \\
+incomelow income & 0.25661775 & 5.575626e-04 & 1.29255095 \\
+daysphyshlthnotgood & 0.03581590 & 9.450336e-106 & 1.03646502 \\
+anyexerYes & -0.18493519 & 5.283247e-06 & 0.83115815 \\
+raceNative Hawaiian or other Pacific Islander only, Non-Hispanic & 0.68088540 & 7.775356e-03 & 1.97562618 \\
+agesenior & 1.23859720 & 1.724281e-138 & 3.45076934 \\
+ageyoung adult & -2.24758619 & 1.018028e-19 & 0.10565395 \\
+bingedrinkerYes & -0.22273369 & 7.370868e-03 & 0.80032796 \\
+weeklydrinks & -0.01068126 & 8.289779e-04 & 0.98937558 \\
 \bottomrule
 \end{tabular}
 \end{table}
 ```
 
-For cancer, we note that some interesting results are that being a senior was again an especially important  for predicting cancer, as it raised the odds of a senior having cancer was about 3.54 times more likely than the other two age groups, when keeping all other predictors constant. 
+For cancer, we note that some interesting results are that being a senior was again an especially important  for predicting cancer, as it raised the odds of a senior having cancer was about 3.54 times more likely than the reference group of middle aged, when keeping all other predictors constant. 
 
 ```{=latex}
 \begin{table}[h]
@@ -439,21 +439,20 @@ For cancer, we note that some interesting results are that being a senior was ag
 \toprule
 \textbf{Cancer Predictor} & Coefficient & p\_value & Odds\_Ratio \\
 \midrule
-(Intercept) & -2.05949908 & 3.062683e-32 & 0.1275178 \\
-bmi & -0.01178735 & 6.016229e-05 & 0.9882819 \\
-daysphyshlthnotgood & 0.02230068 & 1.145559e-48 & 1.0225512 \\
-raceAsian only, non-Hispanic & -0.96748135 & 1.135689e-04 & 0.3800390 \\
-raceNative Hawaiian or other Pacific Islander only, Non-Hispanic & -0.84266246 & 8.530404e-03 & 0.4305626 \\
-agesenior & 1.29886868 & 4.301601e-218 & 3.6651479 \\
-ageyoung adult & -1.30378827 & 5.951748e-25 & 0.2715013 \\
-bingedrinkerYes & -0.26293938 & 2.765505e-05 & 0.7687885 \\
-incomelow income & -0.20822175 & 4.168322e-04 & 0.8120270 \\
+(Intercept) & -2.03178780 & 2.882294e-30 & 0.1311009 \\
+bmi & -0.01243622 & 3.430060e-05 & 0.9876408 \\
+daysphyshlthnotgood & 0.02221518 & 1.349809e-46 & 1.0224638 \\
+raceAsian only, non-Hispanic & -0.94885042 & 1.690569e-04 & 0.3871859 \\
+agesenior & 1.31578327 & 4.803320e-215 & 3.7276696 \\
+ageyoung adult & -1.28756612 & 5.411407e-24 & 0.2759416 \\
+bingedrinkerYes & -0.27515240 & 1.761594e-05 & 0.7594564 \\
+incomelow income & -0.23173324 & 1.067433e-04 & 0.7931577 \\
 \bottomrule
 \end{tabular}
 \end{table}
 ```
 
-Once again, being a senior was a significant contributor to having diabetes. Additionally, being a Native Hawaiian or other Pacific Islander increased a participating veteran’s odds of having diabetes by about 2.06 times versus the other race groups, when keeping all other predictors constant. 
+Once again, being a senior was a significant contributor to having diabetes. Additionally, being a Native Hawaiian or other Pacific Islander increased a participating veteran’s odds of having diabetes by about 2.06 times versus the reference race of American Indian or Alaska Native, when keeping all other predictors constant. 
 
 ```{=latex}
 \begin{table}[h]
@@ -463,24 +462,24 @@ Once again, being a senior was a significant contributor to having diabetes. Add
 \toprule
 \textbf{Diabetes Predictor} & Coefficient & p\_value & Odds\_Ratio \\
 \midrule
-(Intercept) & -4.12867117 & 1.621600e-163 & 0.01610426 \\
-sexMale & 0.27770901 & 7.943496e-08 & 1.32010200 \\
-bmi & 0.08504697 & 9.444434e-231 & 1.08876820 \\
-incomelow income & 0.49767276 & 1.200174e-17 & 1.64488876 \\
-incomemedium income & 0.33574331 & 2.009492e-10 & 1.39897988 \\
-daysphyshlthnotgood & 0.02106108 & 1.014779e-49 & 1.02128443 \\
-anyexerYes & -0.31544124 & 1.872981e-22 & 0.72946694 \\
-raceWhite only, non-Hispanic & -0.46673033 & 6.689181e-06 & 0.62704916 \\
-agesenior & 0.71502632 & 1.050895e-99 & 2.04424049 \\
-ageyoung adult & -1.92191276 & 1.329479e-68 & 0.14632681 \\
-bingedrinkerYes & -0.17608202 & 4.016712e-03 & 0.83854920 \\
-weeklydrinks & -0.02152995 & 8.962312e-15 & 0.97870016 \\
+(Intercept) & -4.52351385 & 7.071627e-171 & 0.01085083 \\
+sexMale & 0.50020112 & 1.150702e-17 & 1.64905289 \\
+bmi & 0.08699755 & 5.699442e-218 & 1.09089400 \\
+incomelow income & 0.49233993 & 2.041857e-15 & 1.63614020 \\
+incomemedium income & 0.33029307 & 4.967705e-09 & 1.39137584 \\
+daysphyshlthnotgood & 0.02216352 & 1.309265e-50 & 1.02241096 \\
+anyexerYes & -0.37677571 & 8.668877e-29 & 0.68606993 \\
+raceWhite only, non-Hispanic & -0.44906561 & 4.238654e-05 & 0.63822422 \\
+agesenior & 0.75707326 & 1.324741e-98 & 2.13202719 \\
+ageyoung adult & -2.33914218 & 5.979166e-58 & 0.09641031 \\
+bingedrinkerYes & -0.20653020 & 2.002169e-03 & 0.81340170 \\
+weeklydrinks & -0.02587227 & 7.107947e-17 & 0.97445955 \\
 \bottomrule
 \end{tabular}
 \end{table}
 ```
 
-Again, being a senior or being a Native Hawaiian or other Pacific Islander increased a participating veteran’s odds of having higher BMI, when holding all other predictors constant. 
+Again, being a senior or being a Native Hawaiian or other Pacific Islander increased a participating veteran’s predicted BMI compared to the reference race of American Indian or Alaska Native, when holding all other predictors constant. 
 
 ```{=latex}
 \begin{table}[h]
@@ -490,17 +489,16 @@ Again, being a senior or being a Native Hawaiian or other Pacific Islander incre
 \toprule
 \textbf{BMI Predictor} & Coefficient & p\_value \\
 \midrule
-(Intercept) & 30.12243076 & 0.000000e+00 \\
-sexMale & 0.56097102 & 9.141508e-09 \\
-incomemedium income & 0.48776886 & 3.405469e-07 \\
-daysphyshlthnotgood & 0.03424263 & 6.825168e-25 \\
-anyexerYes & -1.37618927 & 4.720291e-79 \\
-raceAsian only, non-Hispanic & -2.28341981 & 1.025350e-10 \\
-raceNative Hawaiian or other Pacific Islander only, Non-Hispanic & 1.17344661 & 6.020705e-03 \\
-agesenior & -1.91438463 & 7.577215e-169 \\
-ageyoung adult & -1.12871124 & 3.885129e-25 \\
-bingedrinkerYes & 0.39288963 & 1.166726e-04 \\
-weeklydrinks & -0.02268569 & 1.660973e-13 \\
+(Intercept) & 30.11042063 & 0.000000e+00 \\
+sexMale & 0.58101745 & 5.184119e-09 \\
+incomemedium income & 0.45076399 & 2.949942e-06 \\
+daysphyshlthnotgood & 0.03496438 & 3.582552e-25 \\
+anyexerYes & -1.35134430 & 1.732838e-74 \\
+raceAsian only, non-Hispanic & -2.29296896 & 1.295361e-10 \\
+agesenior & -1.91867928 & 1.211723e-165 \\
+ageyoung adult & -1.11652855 & 2.464129e-24 \\
+bingedrinkerYes & 0.37072697 & 3.320259e-04 \\
+weeklydrinks & -0.02155940 & 6.859478e-12 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -508,7 +506,7 @@ weeklydrinks & -0.02268569 & 1.660973e-13 \\
 
 We can conclude by checking the assumptions for the logistic regression model. First, we assume that the observations in our dataset are independent. Since this BRFSS dataset is made up of randomly chosen respondents from all over the United States, we can assume that the veterans in the dataset are all independent of each other as well. The total number of veterans in the BRFSS dataset is 42841, and the number of veterans is also greater than 32000 within each of the factors we examined, so our sample size is sufficiently large. Lastly, we also assume that the logistic odds of success are linear in the predictors. Since we were not given the statistical tools to validate this assumption, we will not verify this assumption  in this report, but note that our conclusions may have type I error where we rejected the null hypothesis despite it being true.
 
-Next, we can check the assumptions for the multiple linear regression model. Our assumptions are that the linear model holds, the errors are independent of each other, and the sample mean error is normally distributed. From the residual plots in Fig 10, we can see that our assumption does not hold, since there seems to be a lot more residuals above the red line, and most residuals are clustered towards higher fitted values. From the Q-Q plot, we can see a distinct right tail, which also suggests that residuals are not normally distributed. Therefore, we must interpret any final output of the linear model with caution. 
+Next, we can check the assumptions for the multiple linear regression model. Our assumptions are that the linear model holds, the errors are independent of each other, and the sample mean error is normally distributed. From the residual plots in Fig 10, we can see that our assumption does not hold, since there seems to be a lot more residuals above the red line, and most residuals are clustered towards higher fitted values. From the Q-Q plot, we can see a distinct right tail, which also suggests that residuals are not normally distributed. However, we also know that the central limit theorem applies because our sample size is large, but we must still interpret any final output of the linear model with caution. 
 
 ```{r}
 #| echo: false
@@ -540,7 +538,7 @@ plot(model_bmi, which = 2)
 ```
 # Factors Affecting Mental Health
 
-For the mental health of veterans, we decided to focus on whether or not they have been told that they have a depressive disorder. Similar to how we conducted the data analysis, we ran a logistic regression model with some preselected predictors. This time, we chose our predictors to be `sex`, `income`, `race`,  `age`, `bingedrinker`,  `weeklydrinks`, `daysmenthlthnotgood`, and `anyexer`. From the results of the model, we can see that lower income veterans were around 1.9 times more likely to have been told that they have a depressive disorder than other income brackets, holding all other predictors constant. 
+For the mental health of veterans, we decided to focus on whether or not they have been told that they have a depressive disorder. Similar to how we conducted the data analysis, we ran a logistic regression model with some preselected predictors. This time, we chose our predictors to be `sex`, `income`, `race`,  `age`, `bingedrinker`,  `weeklydrinks`, `daysmenthlthnotgood`, and `anyexer`. From the results of the model, we can see that lower income veterans were around 1.9 times more likely to have been told that they have a depressive disorder than the reference group of high income veterans, holding all other predictors constant. 
 
 ```{=latex}
 \begin{table}[h]
@@ -566,7 +564,9 @@ Lastly, we can verify our assumptions about this model. Since this is just a log
 
 # Conclusions and Recommendations
 
-From the results of all of the above models we gain a number of key insights. From the initial demographic section we learned that the demographics of veterans are statistically different from the general US population in income, education and race. Certain races (Black, Hispanic, and Asians) were underrepresented in the veteran population, whilst others are overrepresented — such as White-only non-Hispanic. This could inform health policy and staff to be more prepared for diseases which put certain races at higher-risk than others.
+From the results of all of the above models we gain a number of key insights. Although before we get into the results, we'd like to restate that all these conclusions should be interpreted only within the context of the BRFSS dataset and cannot be extrapolated beyond without further analysis.
+
+From the initial demographic section we learned that the demographics of veterans are statistically different from the general US population in income, education and race. Certain races (Black, Hispanic, and Asians) were underrepresented in the veteran population, whilst others are overrepresented — such as White-only non-Hispanic. This could inform health policy and staff to be more prepared for diseases which put certain races at higher-risk than others.
 
 In the second section, we unpacked how given a particular health factor, the difference in  proportion of veterans and non-veteran who have it is statistically significant. In particular, for physical health factors (heart disease, diabetes, cancer, BMI), we found that veterans are more likely to have the factor. Whereas, for depression, non-veterans are more likely to have it. Hence, this could inform health policy to guide more targeted attention for the physical health of veterans through prevention and holistic well-being support. In contrast, the mental health policies should remain broad and be catered to both the general population and veterans.
 
@@ -574,6 +574,1464 @@ In the last section, we further examined the factors that impact veterans’ phy
 
 
 
+\newpage
+
+## Bibliography
+
+Bureau, US Census. “Veterans Day 2024: November 11.” Census.gov, 16 Oct. 2024, www.census.gov/newsroom/facts-for-features/2024/veterans-day.html.CDC. 
+
+“CDC - BRFSS Annual Survey Data.” Www.cdc.gov, 31 Aug. 2020, www.cdc.gov/brfss/annual_data/annual_data.htm.USAFacts.
+
+“How Many People Live in the US?” USAFacts, 4 Mar. 2026, usafacts.org/answers/how-many-people-live-in-the-us/country/united-states/.
+
+“Understanding Veterans and Mental Illness.” NVHS, 16 Apr. 2026, nvhs.org/veterans-and-mental-illness/?gad_source=1&gad_campaignid=15514416182&gbraid=0AAAAADmTLu
+_p7ZVXVkF4UyN7N9n5jjY9F&gclid=Cj0KCQjwkrzPBhCqARIsAJN460n3DcDuNSRaDDfYjG504YRMtHBaX3T7JY9CyThlfLlgCba47os4apEaAhUjEALw_wcB. 
+
+\newpage
+
+## Appendix
+
+Below is all the code we used to complete tests and generate models. All graphs and tables come from the code from here.   
+
+
+
+# EDA Section
+
+
+
+```{r}
+#| echo: false
+#| label: fig-status-dist
+#| fig-cap: "Comparison of sample sizes between Veterans and Non-Veterans."
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(patchwork)
+library(stringr)
+
+# Define custom colors
+vet_blue <- "#2a79d5"
+vet_teal <- "#29b9d6"
+brfss = read.csv("brfss2022_m62.csv", stringsAsFactors=TRUE)
+veterans <- brfss %>% filter(veteran == "Yes")
+non_veterans <- brfss %>% filter(veteran == "No")
+
+
+ggplot(brfss %>% filter(!is.na(veteran)), aes(x = veteran)) +
+  geom_bar(fill = vet_blue, width = 0.6) +
+  geom_text(stat = "count", aes(label = scales::comma(after_stat(count))), 
+            vjust = -0.5, size = 4, fontface = "bold") +
+  labs(title = "Distribution of Veterans vs Non-Veterans",
+       x = "Veteran Status",
+       y = "Total Count") +
+  theme_minimal(base_size = 12) +
+  theme(panel.grid.major.x = element_blank())
+
+```
+
+
+
+```{r}
+#| echo: false
+#| label: fig-log-reg
+#| fig-height: 7
+#| fig-width: 10
+
+# Prepare data
+model_data <- brfss %>%
+  filter(!is.na(veteran)) %>%
+  mutate(
+    veteran_bin = as.integer(veteran == "Yes"),
+    across(where(is.character), as.factor)
+  ) %>%
+  select(-veteran, -state, -adults) %>% 
+  na.omit()
+
+# Fit model
+log_model <- glm(veteran_bin ~ ., data = model_data, family = binomial)
+
+# Extract and format coefficients
+coef_df <- as.data.frame(summary(log_model)$coefficients) %>%
+  mutate(term = rownames(.)) %>%
+  rename(estimate = Estimate, std_error = `Std. Error`, p_value = `Pr(>|z|)`) %>%
+  filter(term != "(Intercept)") %>%
+  mutate(
+    odds_ratio = exp(estimate),
+    ci_low  = exp(estimate - 1.96 * std_error),
+    ci_high = exp(estimate + 1.96 * std_error),
+    significant = p_value < 0.05
+  ) %>%
+  arrange(desc(abs(estimate))) %>%
+  slice_head(n = 20)
+
+# Plot using the custom color scheme
+ggplot(coef_df, aes(x = odds_ratio, y = reorder(term, odds_ratio), color = significant)) +
+  geom_point(size = 3) +
+  geom_errorbarh(aes(xmin = ci_low, xmax = ci_high), height = 0.3) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "gray40") +
+  scale_color_manual(values = c("FALSE" = "gray70", "TRUE" = vet_blue),
+                     labels = c("Not significant", "p < 0.05")) +
+  labs(
+    title = "Top 20 Predictors of Veteran Status",
+    subtitle = "Odds ratios calculated via logistic regression",
+    x = "Odds Ratio (95% CI)",
+    y = NULL,
+    color = "Significance"
+  ) +
+  theme_minimal()
+```
+
+
+```{r}
+#| echo: false
+#| fig-height: 10
+#| fig-width: 12
+#| label: fig-vet-gender-2
+#| fig-cap: "Gender distribution among surveyed veterans."
+
+ggplot(vets, aes(x = sex)) +
+  geom_bar(fill = "#29b9d6", width = 0.5) +
+  geom_text(stat = "count", aes(label = scales::comma(after_stat(count))), 
+            vjust = -0.5, size = 3.5, fontface = "bold") +
+  labs(title = "Veteran Population by Gender", x = NULL, y = "Count") +
+  theme_minimal()
+```
+
+
+
+
+```{r}
+#| echo: false
+#| label: fig-vet-age
+#| fig-cap: "Age distribution of veterans, showing a heavy skew toward older demographics."
+
+#| label: fig-vet-race
+#| fig-cap: "Racial demographics of veterans within the dataset."
+
+ggplot(vets, aes(y = reorder(race, race, function(x) length(x)))) +
+  geom_bar(fill = "#2a79d5") +
+  geom_text(stat = "count", aes(label = scales::comma(after_stat(count))), 
+            hjust = -0.1, size = 3) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
+  labs(title = "Veteran Population by Race", x = "Count", y = NULL) +
+  theme_minimal()
+
+```
+
+```{r}
+#| echo: false
+#| label: fig-education-comparison
+#| fig-cap: "Education level distribution by veteran status."
+
+brfss %>%
+  filter(!is.na(veteran), !is.na(education)) %>%
+  count(veteran, education) %>%
+  group_by(veteran) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  ggplot(aes(x = education, y = prop, fill = veteran)) +
+  geom_col(position = "dodge", width = 0.7) +
+  geom_text(
+    aes(label = scales::percent(prop, accuracy = 0.1)),
+    position = position_dodge(width = 0.7),
+    vjust = -0.3,
+    size = 3
+  ) +
+  scale_y_continuous(
+    labels = scales::percent,
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 12)) +
+  scale_fill_manual(values = c("No" = vet_teal, "Yes" = vet_blue)) +
+  labs(
+    title = "Education Distribution by Veteran Status",
+    x = "Education Level",
+    y = "Percent Within Group",
+    fill = "Veteran"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+
+
+
+
+
+```{r}
+#| echo: false
+#| label: fig-income-comparison
+#| fig-cap: "Income level distribution by veteran status."
+
+brfss %>%
+  filter(!is.na(veteran), !is.na(income)) %>%
+  count(veteran, income) %>%
+  group_by(veteran) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  ggplot(aes(x = income, y = prop, fill = veteran)) +
+  geom_col(position = "dodge", width = 0.7) +
+  geom_text(
+    aes(label = scales::percent(prop, accuracy = 0.1)),
+    position = position_dodge(width = 0.7),
+    vjust = -0.3,
+    size = 3
+  ) +
+  scale_y_continuous(
+    labels = scales::percent,
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 12)) +
+  scale_fill_manual(values = c("No" = vet_teal, "Yes" = vet_blue)) +
+  labs(
+    title = "Income Distribution by Veteran Status",
+    x = "Income Level",
+    y = "Percent Within Group",
+    fill = "Veteran"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+
+
+```{r}
+#| echo: false
+#| label: fig-age-comparison
+#| fig-cap: "Age distribution by veteran status."
+
+brfss %>%
+  filter(!is.na(veteran), !is.na(age)) %>%
+  count(veteran, age) %>%
+  group_by(veteran) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  ggplot(aes(x = age, y = prop, fill = veteran)) +
+  geom_col(position = "dodge", width = 0.7) +
+  geom_text(
+    aes(label = scales::percent(prop, accuracy = 0.1)),
+    position = position_dodge(width = 0.7),
+    vjust = -0.3,
+    size = 3
+  ) +
+  scale_y_continuous(
+    labels = scales::percent,
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 12)) +
+  scale_fill_manual(values = c("No" = vet_teal, "Yes" = vet_blue)) +
+  labs(
+    title = "Age Distribution by Veteran Status",
+    x = "Age Group",
+    y = "Percent Within Group",
+    fill = "Veteran"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+
+
+# Demographics Section
+
+
+```{r}
+#| echo: false
+library(dplyr)
+library(tidyverse)
+```
+```{r}
+
+# load in BRFSS dataset:
+
+brfss = read.csv("brfss2022_m62.csv", stringsAsFactors=TRUE)
+
+
+```
+
+
+
+```{r}
+#| echo: false
+# Running Chisq test to compare proportions between veterans and national data (gemini-gen)
+# 1. Clean the data: Filter for Veterans and non-NA race entries
+brfss_veterans <- brfss %>%
+  filter(veteran == "Yes") %>%
+  filter(!is.na(race))
+
+# 2. Count the number of unique entries in the race column for veterans
+vet_race_counts <- table(brfss_veterans$race)
+
+# 3. Expected national probabilities (must sum to 1 and match table order)
+expected_probs <- c(0.007, 0.061, 0.126, 0.191, 0.024, 0.002, 0.589)
+
+# 4. Run the Chi-Squared Goodness of Fit Test
+chisq.test(vet_race_counts, p = expected_probs)
+
+
+```
+```{r} 
+# 1. Reshape the data for plotting
+plot_data <- final_display %>%
+  tidyr::pivot_longer(
+    cols = c(Expected_Count, Observed_Count), 
+    names_to = "Count_Type", 
+    values_to = "Count_Value"
+  )
+
+# 2. Create the Grouped Bar Plot with Log Scale
+ggplot(plot_data, aes(x = Race, y = Count_Value, fill = Count_Type)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  # Apply the log transformation
+  # 'labels = scales::comma' makes the numbers easier to read (e.g., 1,000 instead of 1e3)
+#  scale_y_log10(labels = scales::comma) + 
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 15)) +
+  theme_minimal(base_size=14) +
+  labs(
+    title = "Observed vs. Expected Veteran Counts by Race (Log Scale)",
+    x = "Racial Group",
+    y = "Count (Log 10)",
+    fill = "Legend"
+  ) +
+  scale_fill_manual(
+    values = c("Expected_Count" = "#2a79d5", "Observed_Count" = "#29b9d6"),
+    labels = c("Expected", "Observed")
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.minor.y = element_blank() # Clean up log grid lines
+  )
+```
+
+
+```{r}
+#| echo: false
+# Compare veteran race proportions against national expected proportions
+
+observed_counts <- as.numeric(vet_race_counts)
+race_names <- names(vet_race_counts)
+n_total <- sum(observed_counts)
+
+race_prop_tests <- data.frame(
+  Race = race_names,
+  Observed_Count = observed_counts,
+  Observed_Prop = observed_counts / n_total,
+  Expected_Prop = expected_probs
+) %>%
+  rowwise() %>%
+  mutate(
+    p_value = prop.test(
+      x = Observed_Count,
+      n = n_total,
+      p = Expected_Prop,
+      correct = FALSE
+    )$p.value
+  ) %>%
+  ungroup() %>%
+  mutate(
+    p_adj_bonferroni = p.adjust(p_value, method = "bonferroni"),
+    difference = Observed_Prop - Expected_Prop,
+    abs_difference = abs(difference)
+  ) %>%
+  arrange(p_value)
+
+race_prop_tests
+```
+
+
+```{r}
+#| echo: false
+race_prop_tests %>%
+  mutate(direction = ifelse(difference > 0, "Overrepresented", "Underrepresented")) %>%
+  select(Race, Observed_Prop, Expected_Prop, direction, p_adj_bonferroni)
+```
+
+
+
+---
+title: "Veteran Demographics Analysis"
+format: html
+---
+
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+#| echo: false
+library(dplyr)
+library(gt)
+
+# 1. Recreating your processed dataframe based on the screenshot
+# (In your actual file, you can just use 'race_prop_tests' from your previous code)
+race_prop_tests <- data.frame(
+  Race = c("Asian only, non-Hispanic", "Hispanic", "White only, non-Hispanic", 
+           "Black only, non-Hispanic", "American Indian or Alaskan Native only, Non-Hispanic",
+           "Native Hawaiian or other Pacific Islander only, Non-Hispanic", "Multiracial, non-Hispanic"),
+  Observed_Prop = c(0.012736694, 0.049953993, 0.813162865, 0.074313526, 0.017119473, 0.006344133, 0.026369316),
+  Expected_Prop = c(0.061, 0.191, 0.589, 0.126, 0.007, 0.002, 0.024),
+  p_adj_bonferroni = c(0, 0, 0, 4.990780e-219, 1.735058e-133, 4.604660e-86, 1.158692e-02)
+) %>%
+  mutate(direction = ifelse(Observed_Prop > Expected_Prop, "Overrepresented", "Underrepresented"))
+
+# 2. Generate the formatted table
+race_prop_tests %>%
+  gt() %>%
+  # Relabel columns to match your desired style
+  cols_label(
+    Race = "Race",
+    Observed_Prop = "Veteran Prop.",
+    Expected_Prop = "National Prop.",
+    direction = "Representation",
+    p_adj_bonferroni = "p-value (adj)"
+  ) %>%
+  # Format proportions as decimals (matching your first screenshot style)
+  fmt_number(
+    columns = c(Observed_Prop, Expected_Prop),
+    decimals = 4
+  ) %>%
+  # Format p-values: small values as < 2.2e-16 or scientific notation
+  fmt_scientific(
+    columns = p_adj_bonferroni,
+    decimals = 2
+  ) %>%
+  # Apply the "Academic/Minimalist" styling (Thin lines top and bottom)
+  tab_options(
+    table.border.top.color = "black",
+    table.border.top.width = px(2),
+    table.border.bottom.color = "black",
+    table.border.bottom.width = px(2),
+    column_labels.border.bottom.color = "black",
+    column_labels.border.bottom.width = px(1),
+    table_body.hlines.style = "none", # Removes horizontal lines between rows
+    data_row.padding = px(4)
+  ) %>%
+  # Align text left and numbers right
+  cols_align(
+    align = "left",
+    columns = Race
+  ) %>%
+  # Handle the extremely small p-values to look like the screenshot
+  text_transform(
+    locations = cells_body(columns = p_adj_bonferroni, rows = p_adj_bonferroni < 2.2e-16),
+    fn = function(x) "< 2.2e-16"
+  )
+
+
+
+```
+
+
+
+```{r}
+#| echo: false
+# measuring differences in Demographics: education level
+
+brfss_veterans_edu <- brfss %>%
+  filter(veteran == "Yes", age >= 25, !is.na(education))
+
+table(brfss$education, useNA = "ifany")
+
+
+brfss_veterans_edu <- brfss %>%
+  filter(veteran == "Yes", age >= 25, !is.na(education)) %>%
+  mutate(edu_group = case_when(
+    education %in% c("No school", "Elementary", "Some HS") ~ "Less than high school",
+    education == "HS Grad" ~ "High school graduate",
+    education == "Some College" ~ "Some college",
+    education == "College Grad" ~ "Bachelor's or higher",
+    TRUE ~ NA_character_
+  )) %>%
+  filter(!is.na(edu_group))
+```
+
+
+```{r}
+#| echo: false
+# Education comparison: BRFSS veterans vs 2022 U.S. national education distribution
+## Education comparison: BRFSS veterans vs 2022 U.S. national education distribution
+# Source: U.S. Census ACS 2022 S1501, population age 25+
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(stringr)
+library(readr)
+
+# Census ACS 2022 proportions, age 25+
+# These are rounded published values, so we normalize them below.
+expected_edu_props <- c(
+  "Less than high school" = 0.109,
+  "High school graduate" = 0.264,
+  "Some college / associate" = 0.285,
+  "Bachelor's or higher" = 0.209 + 0.134
+)
+
+# Force probabilities to sum exactly to 1
+expected_edu_props <- expected_edu_props / sum(expected_edu_props)
+
+# Clean BRFSS veteran education data
+brfss_veterans_edu <- brfss %>%
+  filter(veteran == "Yes", !is.na(education)) %>%
+  mutate(
+    age_num = if ("age" %in% names(.)) parse_number(as.character(age)) else NA_real_,
+    edu_group = case_when(
+      education %in% c("No school", "Elementary", "Some HS") ~ "Less than high school",
+      education == "HS Grad" ~ "High school graduate",
+      education == "Some College" ~ "Some college / associate",
+      education == "College Grad" ~ "Bachelor's or higher",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  filter(!is.na(edu_group)) %>%
+  filter(is.na(age_num) | age_num >= 25)
+
+# Observed counts
+observed_edu_counts <- table(brfss_veterans_edu$edu_group)
+
+# Reorder expected probabilities to match observed table
+expected_edu_props_ordered <- expected_edu_props[names(observed_edu_counts)]
+
+# Normalize again after reordering, just in case any categories are missing
+expected_edu_props_ordered <- expected_edu_props_ordered / sum(expected_edu_props_ordered)
+
+# Chi-square goodness-of-fit test
+edu_chisq_test <- chisq.test(
+  observed_edu_counts,
+  p = expected_edu_props_ordered
+)
+
+edu_chisq_test
+
+# Table showing which education groups differ most
+edu_diff_table <- data.frame(
+  Education = names(observed_edu_counts),
+  Observed_Count = as.numeric(observed_edu_counts),
+  Expected_Prop = expected_edu_props_ordered
+) %>%
+  mutate(
+    Total = sum(Observed_Count),
+    Observed_Prop = Observed_Count / Total,
+    Expected_Count = Expected_Prop * Total,
+#    Difference = Observed_Prop - Expected_Prop,
+#    Percent_Point_Gap = 100 * Difference,
+ #   ChiSq_Contribution = (Observed_Count - Expected_Count)^2 / Expected_Count,
+    Direction = ifelse(Difference > 0, "Overrepresented", "Underrepresented")
+  ) %>%
+  arrange(desc(ChiSq_Contribution))
+
+edu_diff_table
+
+# Education group that differs most
+edu_diff_table %>%
+  slice_max(ChiSq_Contribution, n = 1)
+
+# Plot observed vs expected proportions
+edu_diff_table %>%
+  select(Education, Observed_Prop, Expected_Prop) %>%
+  pivot_longer(
+    cols = c(Observed_Prop, Expected_Prop),
+    names_to = "Type",
+    values_to = "Proportion"
+  ) %>%
+  ggplot(aes(x = Education, y = Proportion, fill = Type)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::percent) +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Veteran Education Distribution vs 2022 U.S. National Average",
+    x = "Education Level",
+    y = "Proportion",
+    fill = "Group"
+  ) +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+
+
+```{r}
+#| echo: false
+# One-sample proportion tests for each education group
+# with Bonferroni correction
+
+edu_prop_tests <- data.frame(
+  Education = names(observed_edu_counts),
+  Observed_Count = as.numeric(observed_edu_counts),
+  Expected_Prop = expected_edu_props_ordered
+) %>%
+  mutate(
+    Total = sum(Observed_Count),
+    Observed_Prop = Observed_Count / Total,
+    Difference = Observed_Prop - Expected_Prop,
+  ) %>%
+  rowwise() %>%
+  mutate(
+    p_value = prop.test(
+      x = Observed_Count,
+      n = Total,
+      p = Expected_Prop,
+      correct = FALSE
+    )$p.value
+  ) %>%
+  ungroup() %>%
+  mutate(
+    p_bonferroni = p.adjust(p_value, method = "bonferroni"),
+    Significant_Bonferroni = p_bonferroni < 0.05,
+    Direction = ifelse(Difference > 0, "Overrepresented", "Underrepresented")
+  ) %>%
+  arrange(p_bonferroni)
+
+edu_prop_tests <- edu_prop_tests %>%
+  select(
+    Education,
+    Observed_Prop,
+    Expected_Prop,
+    p_bonferroni,
+    Direction
+  )
+
+edu_prop_tests
+```
+
+
+```{r}
+#| echo: false
+# Income comparison: BRFSS veterans vs 2022 U.S. national household income distribution
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(stringr)
+
+# Manually entered 2022 ACS national household income proportions
+# Broad categories based on Census ACS B19001
+national_income_df <- data.frame(
+  Income = c(
+    "Less than $25,000",
+    "$25,000 to less than $50,000",
+    "$50,000 to less than $75,000",
+    "$75,000 or more"
+  ),
+  Expected_Prop = c(
+    0.161,
+    0.171,
+    0.148,
+    0.520
+  )
+) %>%
+  mutate(Expected_Prop = Expected_Prop / sum(Expected_Prop))
+
+# Clean BRFSS veteran income data
+brfss_veterans_income <- brfss %>%
+  filter(veteran == "Yes", !is.na(income)) %>%
+  mutate(
+    income_chr = as.character(income),
+    income_group = case_when(
+      income_chr %in% c(
+        "Less than $10000",
+        "$10000 to $14999",
+        "$15000 to $19999",
+        "$20000 to $24999"
+      ) ~ "Less than $25,000",
+      
+      income_chr %in% c(
+        "$25000 to $34999",
+        "$35000 to $49999"
+      ) ~ "$25,000 to less than $50,000",
+      
+      income_chr == "$50000 to $74999" ~ "$50,000 to less than $75,000",
+      
+      income_chr %in% c(
+        "$75000 to $99999",
+        "$100000 to $149999",
+        "$150000 to $199999",
+        "$200000 or more"
+      ) ~ "$75,000 or more",
+      
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  filter(!is.na(income_group))
+
+# Observed veteran income counts
+observed_income_counts <- table(brfss_veterans_income$income_group)
+
+# Expected proportions ordered to match observed table
+expected_income_props_ordered <- national_income_df$Expected_Prop[
+  match(names(observed_income_counts), national_income_df$Income)
+]
+
+expected_income_props_ordered <- expected_income_props_ordered / sum(expected_income_props_ordered)
+
+# Chi-square goodness-of-fit test
+income_chisq_test <- chisq.test(
+  observed_income_counts,
+  p = expected_income_props_ordered
+)
+
+income_chisq_test
+
+# Table showing which income groups differ most
+income_diff_table <- data.frame(
+  Income = names(observed_income_counts),
+  Observed_Count = as.numeric(observed_income_counts),
+  Expected_Prop = expected_income_props_ordered
+) %>%
+  mutate(
+    Total = sum(Observed_Count),
+    Observed_Prop = Observed_Count / Total,
+    Expected_Count = Expected_Prop * Total,
+    Difference = Observed_Prop - Expected_Prop,
+    ChiSq_Contribution = (Observed_Count - Expected_Count)^2 / Expected_Count,
+    Direction = ifelse(Difference > 0, "Overrepresented", "Underrepresented")
+  ) %>%
+  arrange(desc(ChiSq_Contribution))
+
+income_diff_table
+
+# One-sample proportion tests with Bonferroni correction
+income_prop_tests <- data.frame(
+  Income = names(observed_income_counts),
+  Observed_Count = as.numeric(observed_income_counts),
+  Expected_Prop = expected_income_props_ordered
+) %>%
+  mutate(
+    Total = sum(Observed_Count),
+    Observed_Prop = Observed_Count / Total,
+    Difference = Observed_Prop - Expected_Prop
+  ) %>%
+  rowwise() %>%
+  mutate(
+    p_value = prop.test(
+      x = Observed_Count,
+      n = Total,
+      p = Expected_Prop,
+      correct = FALSE
+    )$p.value
+  ) %>%
+  ungroup() %>%
+  mutate(
+    p_bonferroni = p.adjust(p_value, method = "bonferroni"),
+    Direction = ifelse(Difference > 0, "Overrepresented", "Underrepresented")
+  ) %>%
+  select(
+    Income,
+    Observed_Prop,
+    Expected_Prop,
+    p_bonferroni,
+    Direction
+  ) %>%
+  arrange(p_bonferroni)
+
+income_prop_tests
+# Plot observed vs expected proportions using same color scheme
+income_diff_table %>%
+  select(Income, Observed_Prop, Expected_Prop) %>%
+  pivot_longer(
+    cols = c(Observed_Prop, Expected_Prop),
+    names_to = "Type",
+    values_to = "Proportion"
+  ) %>%
+  mutate(
+    Type = recode(
+      Type,
+      "Observed_Prop" = "Observed",
+      "Expected_Prop" = "Expected"
+    )
+  ) %>%
+  ggplot(aes(x = Income, y = Proportion, fill = Type)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(
+    values = c("Expected" = vet_blue, "Observed" = vet_teal)
+  ) +
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Veteran Income Distribution vs 2022 U.S. National Average",
+    x = "Income Level",
+    y = "Proportion",
+    fill = "Group"
+  ) +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+
+
+
+
+# Veteran vs Non Veteran: Mental + Physical Health
+
+
+
+```{r}
+#| echo: false
+library(dplyr)
+brfss = read.csv("brfss2022_m62.csv", stringsAsFactors=TRUE)
+veteran <- subset(brfss, veteran == "Yes")
+nrow(veteran)
+nonVeteran <- subset(brfss, veteran == "No")
+nrow(nonVeteran)
+```
+
+Comparisons of physical health between veterans and non-veterans:
+
+Arthritis: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranArthClean <- veteran %>% filter(!is.na(arthritis))
+nonVeteranArthClean <- nonVeteran %>% filter(!is.na(arthritis))
+
+arthritisVeterans <- sum(veteranArthClean$arthritis == "Yes")
+arthritisNonVeterans <- sum(nonVeteranArthClean$arthritis == "Yes")
+
+successes <- c(arthritisVeterans, arthritisNonVeterans)
+n_obs <- c(nrow(veteranArthClean), nrow(nonVeteranArthClean))
+
+arthritis_prop_test <- prop.test(successes, n_obs)
+arthritis_prop_test
+```
+
+Heart Disease: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranHDClean <- veteran %>% filter(!is.na(heartdisease))
+nonVeteranHDClean <- nonVeteran %>% filter(!is.na(heartdisease))
+
+hdVeterans <- sum(veteranHDClean$heartdisease == "Yes")
+hdNonVeterans <- sum(nonVeteranHDClean$heartdisease == "Yes")
+
+successes <- c(hdVeterans, hdNonVeterans)
+n_obs <- c(nrow(veteranHDClean), nrow(nonVeteranHDClean))
+
+hd_prop_test <- prop.test(successes, n_obs)
+hd_prop_test
+```
+
+Cancer: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranCancerClean <- veteran %>% filter(!is.na(cancer))
+nonVeteranCancerClean <- nonVeteran %>% filter(!is.na(cancer))
+
+cancerVeterans <- sum(veteranCancerClean$cancer == "Yes")
+cancerNonVeterans <- sum(nonVeteranCancerClean$cancer == "Yes")
+
+successes <- c(cancerVeterans, cancerNonVeterans)
+n_obs <- c(nrow(veteranCancerClean), nrow(nonVeteranCancerClean))
+
+cancer_prop_test <- prop.test(successes, n_obs)
+cancer_prop_test
+```
+
+Diabetes: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranDiabetesClean <- veteran %>% filter(!is.na(diabetes))
+nonVeteranDiabetesClean <- nonVeteran %>% filter(!is.na(diabetes))
+
+diabetesVeterans <- sum(veteranDiabetesClean$diabetes == "Yes")
+diabetesNonVeterans <- sum(nonVeteranDiabetesClean$diabetes == "Yes")
+
+successes <- c(diabetesVeterans, diabetesNonVeterans)
+n_obs <- c(nrow(veteranDiabetesClean), nrow(nonVeteranDiabetesClean))
+
+diabetes_prop_test <- prop.test(successes, n_obs)
+diabetes_prop_test
+```
+
+COPD: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranCOPDClean <- veteran %>% filter(!is.na(copd))
+nonVeteranCOPDClean <- nonVeteran %>% filter(!is.na(copd))
+
+copdVeterans <- sum(veteranCOPDClean$copd == "Yes")
+copdNonVeterans <- sum(nonVeteranCOPDClean$copd == "Yes")
+
+successes <- c(copdVeterans, copdNonVeterans)
+n_obs <- c(nrow(veteranCOPDClean), nrow(nonVeteranCOPDClean))
+
+copd_prop_test <- prop.test(successes, n_obs)
+copd_prop_test
+```
+
+daysphyshlthnotgood: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranDaysphyshlthnotgoodClean <- veteran %>% filter(!is.na(daysphyshlthnotgood))
+nonVeteranDaysphyshlthnotgoodClean <- nonVeteran %>% filter(!is.na(daysphyshlthnotgood))
+
+daysphyshlthnotgoodVeterans <- mean(veteranDaysphyshlthnotgoodClean$daysphyshlthnotgood)
+daysphyshlthnotgoodNonVeterans <- mean(nonVeteranDaysphyshlthnotgoodClean$daysphyshlthnotgood)
+
+daysphyshlthnotgood_t_test <- t.test(veteranDaysphyshlthnotgoodClean$daysphyshlthnotgood,
+                                     nonVeteranDaysphyshlthnotgoodClean$daysphyshlthnotgood,
+                                     alternative="two.sided",
+                                     mu=0, paired=FALSE, var.equal = FALSE,
+                                     conf.level=0.95)
+daysphyshlthnotgood_t_test
+```
+
+Check Assumptions (equal variances):
+```{r}
+#| echo: false
+#| 
+hist(veteranDaysphyshlthnotgoodClean$daysphyshlthnotgood,
+     main = "Days Physical Health Not Good (Veteran)",
+     xlab = "Number of days in past month physical health was not good")
+hist(nonVeteranDaysphyshlthnotgoodClean$daysphyshlthnotgood,
+     main = "Days Physical Health Not Good (Non-Veteran)",
+     xlab = "Number of days in past month physical health was not good")
+```
+
+
+```{r}
+#| echo: false
+# Summary of physical health tests
+
+factors <- c("Arthritis", "Heart Disease", "Cancer", "Diabetes", "COPD", "Days Physical Health Not Good")
+prop_vet <- c(0.4356422, 0.1244373, 0.1789827, 0.1962027, 0.11969946, 4.972634)
+prop_nonVet <- c(0.3455287, 0.0543102, 0.1105903, 0.1340290, 0.07724301, 4.338173)
+p_values <- rep("< 2.2e-16", 6)
+
+physical_tests <- data.frame(
+  Factors = factors,
+  Veteran = prop_vet,
+  NonVeteran = prop_nonVet,
+  pvalue = p_values
+)
+
+physical_tests
+```
+
+```{r}
+#| echo: false
+# Enhanced R Plotting Script
+#| echo: false
+
+# --- Data ---
+labels_a <- c("Arthritis", "Heart Disease", "Cancer", "Diabetes", "COPD")
+prop_vet <- c(0.4356422, 0.1244373, 0.1789827, 0.1962027, 0.11969946)
+prop_nonVet <- c(0.3455287, 0.0543102, 0.1105903, 0.1340290, 0.07724301)
+data_matrix_a <- rbind(prop_vet, prop_nonVet)
+colnames(data_matrix_a) <- labels_a
+
+labels_b <- c("Days Phys. Health\nNot Good")
+mean_vet <- c(4.972634)
+mean_nonVet <- c(4.338173)
+data_matrix_b <- rbind(mean_vet, mean_nonVet)
+colnames(data_matrix_b) <- labels_b
+
+chart_colors <- c("#2a79d5", "#29b9d6")
+
+# --- Layout Configuration ---
+par(mfrow = c(1, 2), mar = c(5, 4, 4, 2))
+
+# --- Plot 1: Chronic Conditions ---
+# Initialize the plot area without drawing bars yet to set up the grid
+bp1 <- barplot(data_matrix_a, beside = TRUE, col = NA, border = NA, 
+               main = "Chronic Health Conditions", ylab = "Proportion", 
+               ylim = c(0, 0.5), las = 1, cex.names = 0.7, font.main = 2)
+
+# Draw the grid lines FIRST
+grid(nx = NA, ny = NULL, col = "gray90", lty = "solid")
+
+# Overlay the bars ON TOP of the grid
+barplot(data_matrix_a, 
+        beside = TRUE, 
+        col = chart_colors,
+        border = "white",
+        add = TRUE,          # This tells R to draw over the existing grid
+        las = 1, 
+        cex.names = 0.7,
+        xaxt = "n")          # Prevents double-drawing labels
+
+legend("topright", legend = c("Veteran", "Non-Veteran"), 
+       fill = chart_colors, bty = "n", cex = 0.7)
+
+# --- Plot 2: Quality of Life ---
+barplot(data_matrix_b, beside = TRUE, col = NA, border = NA, 
+        main = "Average Days Unwell", ylab = "Mean Days", 
+        ylim = c(0, 6), las = 1, cex.names = 0.7, font.main = 2)
+
+grid(nx = NA, ny = NULL, col = "gray90", lty = "solid")
+
+barplot(data_matrix_b, 
+        beside = TRUE, 
+        col = chart_colors,
+        border = "white",
+        add = TRUE, 
+        las = 2, 
+        cex.names = 0.7,
+        xaxt = "n")
+
+# Reset
+par(mfrow = c(1, 1))
+```
+
+Comparisons of mental health between veterans and non-veterans:
+
+Depression: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranDepressClean <- veteran %>% filter(!is.na(depress))
+nonVeteranDepressClean <- nonVeteran %>% filter(!is.na(depress))
+
+depressVeterans <- sum(veteranDepressClean$depress == "Yes")
+depressNonVeterans <- sum(nonVeteranDepressClean$depress == "Yes")
+
+successes <- c(depressVeterans, depressNonVeterans)
+n_obs <- c(nrow(veteranDepressClean), nrow(nonVeteranDepressClean))
+
+depress_prop_test <- prop.test(successes, n_obs)
+depress_prop_test
+```
+
+daysmenthlthnotgood: p-value $< 2.2 \times 10^{-16}$
+```{r}
+#| echo: false
+
+veteranDaysmenthlthnotgoodClean <- veteran %>% filter(!is.na(daysmenthlthnotgood))
+nonVeteranDaysmenthlthnotgoodClean <- nonVeteran %>% filter(!is.na(daysmenthlthnotgood))
+
+daysmenthlthnotgoodVeterans <- mean(veteranDaysmenthlthnotgoodClean$daysmenthlthnotgood)
+daysmenthlthnotgoodNonVeterans <- mean(nonVeteranDaysmenthlthnotgoodClean$daysmenthlthnotgood)
+
+daysmenthlthnotgood_t_test <- t.test(veteranDaysmenthlthnotgoodClean$daysmenthlthnotgood,
+                                     nonVeteranDaysmenthlthnotgoodClean$daysmenthlthnotgood,
+                                     alternative="two.sided",
+                                     mu=0, paired=FALSE, var.equal = TRUE,
+                                     conf.level=0.95)
+daysmenthlthnotgood_t_test
+```
+
+Check Assumptions (equal variances):
+```{r}
+#| echo: false
+#| 
+hist(veteranDaysmenthlthnotgoodClean$daysmenthlthnotgood,
+     main = "Days Mental Health Not Good (Veteran)",
+     xlab = "Number of days in past month mental health was not good")
+hist(nonVeteranDaysmenthlthnotgoodClean$daysmenthlthnotgood,
+     main = "Days Mental Health Not Good (Non-Veteran)",
+     xlab = "Number of days in past month mental health was not good")
+```
+
+```{r}
+#| echo: false
+# Summary of Mental Health Tests
+
+factors <- c("Depression", "Days Physical Health Not Good")
+prop_vet <- c(0.1757344, 3.517690)
+prop_nonVet <- c(0.2166535, 4.462462)
+p_values <- rep("< 2.2e-16", 2)
+
+mental_tests <- data.frame(
+  Factors = factors,
+  Veteran = prop_vet,
+  NonVeteran = prop_nonVet,
+  pvalue = p_values
+)
+
+mental_tests
+```
+
+```{r}
+#| echo: false
+# generated with help from gemini
+
+# Your vectors
+labels_a <- c("Depression")
+prop_vet <- c(0.1757344)
+prop_nonVet <- c(0.2166535)
+
+# Combine into a matrix
+data_matrix_a <- rbind(prop_vet, prop_nonVet)
+
+# Assign column names to the matrix
+colnames(data_matrix_a) <- labels_a
+
+# Your vectors
+labels_b <- c("daysmenthlthnotgood")
+mean_vet <- c(3.517690)
+mean_nonVet <- c(4.462462)
+
+# Combine into a matrix
+data_matrix_b <- rbind(mean_vet, mean_nonVet)
+
+# Assign column names to the matrix
+colnames(data_matrix_b) <- labels_b
+
+# Create the grouped barplot
+# Adjust margins so the long label fits (bottom, left, top, right)
+par(mar = c(12, 4, 4, 2) + 0.1)
+par(mfrow=c(1,2))
+
+barplot(data_matrix_a, 
+        beside = TRUE,                   # This places the bars side-by-side
+        col = c("skyblue", "salmon"),    # Colors for the two groups
+        legend.text = c("Veteran", "Non-Veteran"),
+        args.legend = list(x = "topright", bty = "n"),
+        main = "Health Indicators: ",
+        ylab = "Value",
+        las = 1,                         # Rotates x-axis labels to be vertical
+        cex.names = 0.8)                 # Shrinks the label text slightly
+
+barplot(data_matrix_b, 
+        beside = TRUE,                   # This places the bars side-by-side
+        col = c("skyblue", "salmon"),    # Colors for the two groups
+        legend.text = c("Veteran", "Non-Veteran"),
+        args.legend = list(x = "topright", bty = "n"),
+        main = "Veterans vs Non-Veterans",
+        ylab = "Value",
+        las = 1,                         # Rotates x-axis labels to be vertical
+        cex.names = 0.8)                 # Shrinks the label text slightly
+```
+
+What is the difference in the probability of having a specific health factor being a veteran vs. non-veteran?
+
+```{r}
+#| echo: false
+
+arthritisClean <- brfss %>% filter(!is.na(arthritis))
+
+arthritisClean$veteran <- as.factor(arthritisClean$veteran)
+
+arthritisClean$arthritis <- as.factor(arthritisClean$arthritis)
+
+arthritisMod <- glm(formula = arthritis ~ veteran, data = arthritisClean, family = "binomial")
+
+summary(arthritisMod)
+```
+
+```{r}
+p_vet_arthritis <- plogis(-0.63875 + 0.37988 * 1)
+p_nonVet_arthritis <- plogis(-0.63875 + 0.37988 * 0)
+
+cat("P(Arthritis | Veteran) = ", p_vet_arthritis)
+cat('\n')
+cat("P(Arthritis | Non-Veteran) = ", p_nonVet_arthritis)
+```
+
+```{r}
+#| echo: false
+
+hdClean <- brfss %>% filter(!is.na(heartdisease))
+
+hdClean$veteran <- as.factor(hdClean$veteran)
+
+hdClean$heartdisease <- as.factor(hdClean$heartdisease)
+
+hdMod <- glm(formula = heartdisease ~ veteran, data = hdClean, family = "binomial")
+
+summary(hdMod)
+```
+
+```{r}
+p_vet_hd <- plogis(-2.857202 + 0.906138 * 1)
+p_nonVet_hd <- plogis(-2.857202 + 0.906138 * 0)
+
+cat("P(Heart Disease | Veteran) = ", p_vet_hd)
+cat('\n')
+cat("P(Heart Disease | Non-Veteran) = ", p_nonVet_hd)
+```
+
+```{r}
+#| echo: false
+
+cancerClean <- brfss %>% filter(!is.na(cancer))
+
+cancerClean$veteran <- as.factor(cancerClean$veteran)
+
+cancerClean$cancer <- as.factor(cancerClean$cancer)
+
+cancerMod <- glm(formula = cancer ~ veteran, data = cancerClean, family = "binomial")
+
+summary(cancerMod)
+```
+
+```{r}
+p_vet_cancer <- plogis(-2.084725 + 0.56147 * 1)
+p_nonVet_cancer <- plogis(-2.084725 + 0.56147 * 0)
+
+cat("P(Cancer | Veteran) = ", p_vet_cancer)
+cat('\n')
+cat("P(Cancer | Non-Veteran) = ", p_nonVet_cancer)
+```
+
+```{r}
+#| echo: false
+
+diabetesClean <- brfss %>% filter(!is.na(diabetes))
+
+diabetesClean$veteran <- as.factor(diabetesClean$veteran)
+
+diabetesClean$diabetes <- as.factor(diabetesClean$diabetes)
+
+diabetesMod <- glm(formula = diabetes ~ veteran, data = diabetesClean, family = "binomial")
+
+summary(diabetesMod)
+```
+
+```{r}
+p_vet_diabetes <- plogis(-1.602633 + 0.370480 * 1)
+p_nonVet_diabetes <- plogis(-1.602633 + 0.370480 * 0)
+
+cat("P(Diabetes | Veteran) = ", p_vet_diabetes)
+cat('\n')
+cat("P(Diabetes | Non-Veteran) = ", p_nonVet_diabetes)
+```
+
+```{r}
+#| echo: false
+
+copdClean <- brfss %>% filter(!is.na(copd))
+
+copdClean$veteran <- as.factor(copdClean$veteran)
+
+copdClean$diabetes <- as.factor(copdClean$copd)
+
+copdMod <- glm(formula = copd ~ veteran, data = copdClean, family = "binomial")
+
+summary(copdMod)
+```
+
+```{r}
+p_vet_copd <- plogis(-2.480409 + 0.485130 * 1)
+p_nonVet_copd <- plogis(-2.480409 + 0.485130 * 0)
+
+cat("P(COPD | Veteran) = ", p_vet_copd)
+cat('\n')
+cat("P(COPD | Non-Veteran) = ", p_nonVet_copd)
+```
+
+```{r}
+#| echo: false
+
+depressClean <- brfss %>% filter(!is.na(depress))
+
+depressClean$veteran <- as.factor(depressClean$veteran)
+
+depressClean$depress <- as.factor(depressClean$depress)
+
+depressMod <- glm(formula = depress ~ veteran, data = depressClean, family = "binomial")
+
+summary(depressMod)
+```
+
+```{r}
+p_vet_depress <- plogis(-1.285276 - 0.260243 * 1)
+p_nonVet_depress <- plogis(-1.285276 - 0.260243 * 0)
+
+cat("P(Depressive Disorder Diagnosis | Veteran) = ", p_vet_depress)
+cat('\n')
+cat("P(Depressive Disorder Diagnosis | Non-Veteran) = ", p_nonVet_depress)
+```
+
+
+
+What are some factors that influence physical health among veterans
+
+```{r}
+library(sjPlot)
+library(sjlabelled)
+library(sjmisc)
+library(ggplot2)
+brfss = read.csv("brfss2022_m62.csv", stringsAsFactors=TRUE)
+
+head(brfss)
+```
+
+```{r Physical Health: Heart Disease}
+#| echo: false
+veteran <- subset(brfss, veteran == "Yes")
+
+
+
+# Code below is Gemini generated: Prompt was that given these age groups, merge them so that we have three columns of young adult, middle age, and seniors
+
+# 1. Create the new categorization logic
+# We assign the categories based on the modified strings
+veteran$age_category <- ifelse(veteran$age %in% c("25 to 29", "30 to 34", "35 to 39"), "young adult",
+                        ifelse(veteran$age %in% c("40 to 44", "45 to 49", "50 to 54", "55 to 59", "60 to 64"), "middle-aged",
+                        ifelse(veteran$age %in% c("65 to 69", "70 to 74", "75 to 79", "80 or older"), "senior", NA)))
+
+# 2. Remove the old granular column and rename the new one to 'age'
+veteran$age <- NULL
+names(veteran)[names(veteran) == "age_category"] <- "age"
+
+#Code below is Gemini generated: Prompt was that given these income groups, merge them so that we have three columns of high income, medium income, low income
+# 1. Create the new categorization logic
+veteran$income <- ifelse(veteran$income %in% c("$150000 to $199999", "$200000 or more"), 
+                                "high income",
+                         ifelse(veteran$income %in% c("Less than $10000", "$10000 to $14999", 
+                                                             "$15000 to $19999", "$20000 to $24999", 
+                                                             "$25000 to $34999"), 
+                                "low income",
+                         ifelse(is.na(veteran$income), NA, "medium income")))
+
+
+
+```
+
+
+```{r}
+# Lines below generated by Gemini, prompt was that given these columns, drop any rows where any of these columns are NA, and only keep entries in diabetes that's "Yes" or "No"
+# Define the variables of interest
+vars <- c("heartdisease", "sex", "bmi", "cancer", 
+          "daysphyshlthnotgood", "anyexer", "race", 
+          "age", "bingedrinker", "weeklydrinks", "heartdisease", "income")
+
+# Subset rows where all specified columns are non-NA
+veteran_physical <- veteran[complete.cases(veteran[, vars]), ]
+
+# This keeps only rows where diabetes is exactly "Yes" or "No"
+veteran_physical <- veteran_physical[veteran_physical$diabetes %in% c("Yes", "No"), ]
+
+#The lines below are generated by Gemini, prompt was that given these column names, show how many veterans is in each category
+# 1. Define the variables
+vars <- c("daysmenthlthnotgood", "income", "race", "age", "bingedrinker", 
+          "weeklydrinks", "sex", "anyexer", "depress", "bmi", 
+          "cancer", "diabetes", "daysphyshlthnotgood")
+
+# 2. Calculate the count of non-NA values for each column
+# !is.na(x) returns TRUE for non-missing values; colSums totals those TRUEs
+non_na_counts <- colSums(!is.na(veteran_physical[, vars]))
+
+# 3. View the results as a data frame for readability
+as.data.frame(non_na_counts)
+
+```
+
+
+```{r}
+#| echo: false
+model_heartdisease <- glm(formula = heartdisease ~ sex + bmi + income +
+                 daysphyshlthnotgood + anyexer + race +
+                 age + bingedrinker + weeklydrinks , data=veteran_physical, family=binomial)
+```
+
+
+
+```{r Physical Health: Cancer}
+#| echo: false
+
+model_cancer <- glm(formula = cancer ~ sex + bmi +
+                 daysphyshlthnotgood + anyexer + race +
+                 age + bingedrinker + weeklydrinks + income, data=veteran_physical, family=binomial)
+
+
+```
+
+
+```{r Physical Health: Diabetes}
+#| echo: false
+
+model_diabetes <- glm(formula = diabetes ~ sex + bmi + income +
+                 daysphyshlthnotgood + anyexer + race +
+                 age + bingedrinker + weeklydrinks , data=veteran_physical, family=binomial)
+
+```
+
+```{r Physical Health: BMI}
+#| echo: false
+
+model_bmi <- lm(formula = bmi ~ sex + income +
+                 daysphyshlthnotgood + anyexer + race +
+                 age + bingedrinker + weeklydrinks , data=veteran_physical)
+
+
+```
+
+What are some factors that influence mental health among veterans
+
+```{r Mental Health: Depression}
+#| echo: false
+
+# Two lines below generated by Gemini, prompt was that given these columns, drop any rows where any of these columns are NA
+# Define the variables of interest
+
+vars_mental <- c("daysmenthlthnotgood", "income", "race", "age", "bingedrinker", "weeklydrinks", "sex", "anyexer", "depress")
+
+# Subset rows where all specified columns are non-NA
+veteran_mental <- veteran[complete.cases(veteran[, vars_mental]), ]
+
+
+model_depression <- glm(formula = depress ~ sex + income +
+                 daysmenthlthnotgood + anyexer + race +
+                 age + bingedrinker + weeklydrinks , data=veteran_mental, family=binomial)
+
+```
+
+
+```{r}
+#Below code generated by Gemini, instructions was to make a data frame table that included the below columns based on a given regression model
+
+# 1. Updated Helper Function to include p-values
+get_sig_df <- function(model) {
+  # Extract coefficients into a data frame
+  stats <- as.data.frame(summary(model)$coefficients)
+  
+  # Standardize column names
+  colnames(stats) <- c("Coefficient", "StdError", "t_z_value", "p_value")
+  
+  # Move Predictors to a column
+  stats$Predictor <- rownames(stats)
+  
+  # Calculate Odds Ratio
+  stats$Odds_Ratio <- exp(stats$Coefficient)
+  
+  # Filter for significance (p < 0.01) to be on the safe side
+  # Select Predictor, Coefficient, Odds_Ratio, and p_value
+  #final_df <- stats[stats$p_value < 0.01, c("Predictor", "Coefficient","p_value", "Odds_Ratio")]
+  
+  adjusted_p_value <- 0.05/9
+  
+  final_df <- stats[stats$p_value < adjusted_p_value, c("Predictor", "Coefficient","p_value", "Odds_Ratio")]
+  
+  # Reset row names
+  rownames(final_df) <- NULL
+  
+  return(final_df)
+}
+
+# 2. Generate the 5 data frames
+sig_heart    <- get_sig_df(model_heartdisease)
+sig_cancer   <- get_sig_df(model_cancer)
+sig_diabetes <- get_sig_df(model_diabetes)
+sig_bmi      <- get_sig_df(model_bmi)
+sig_depress  <- get_sig_df(model_depression)
+
+
+# 3. Display the tables
+cat("\n--- Table 1: Heart Disease ---\n")
+print(sig_heart)
+
+cat("\n--- Table 2: Cancer ---\n")
+print(sig_cancer)
+
+cat("\n--- Table 3: Diabetes ---\n")
+print(sig_diabetes)
+
+cat("\n--- Table 4: BMI ---\n")
+print(sig_bmi)
+
+cat("\n--- Table 5: Depression ---\n")
+print(sig_depress)
+
+```
+
+
+```{r}
+plot(model_bmi, which = 1)
+plot(model_bmi, which = 2)
+
+
+```
 
 
 
