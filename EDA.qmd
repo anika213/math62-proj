@@ -1,0 +1,264 @@
+---
+title: "Math 62: Homework 1"
+subtitle: "Due: Thursday, January 29, 2026 at 5:00 pm PST on Gradescope"
+number-sections: false
+include-in-header: 
+   text: |
+     \usepackage{fvextra}
+     \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+     \DefineVerbatimEnvironment{OutputCode}{Verbatim}{breaklines,commandchars=\\\{\}}
+format: pdf
+---
+
+\newcommand{\real}{\mathbb{R}}
+\newcommand{\nimplies}{\centernot\implies}
+\newcommand{\e}{\mathbb{E}}
+\setcounter{section}{-1}
+
+::: {.content-hidden when-format="latex"}
+\DeclareMathOperator*{\argmin}{\arg\!\min}
+\DeclareMathOperator*{\argmax}{\arg\!\max}
+:::
+
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(patchwork)
+library(stringr)
+
+# Define custom colors
+vet_blue <- "#2a79d5"
+vet_teal <- "#29b9d6"
+
+brfss <- read_csv("brfss2022_m62.csv", show_col_types = FALSE)
+
+# Filter veteran groups
+veterans <- brfss %>% filter(veteran == "Yes")
+non_veterans <- brfss %>% filter(veteran == "No")
+
+```
+
+
+```{r}
+#| label: fig-status-dist
+#| fig-cap: "Comparison of sample sizes between Veterans and Non-Veterans."
+
+ggplot(brfss %>% filter(!is.na(veteran)), aes(x = veteran)) +
+  geom_bar(fill = vet_blue, width = 0.6) +
+  geom_text(stat = "count", aes(label = scales::comma(after_stat(count))), 
+            vjust = -0.5, size = 4, fontface = "bold") +
+  labs(title = "Distribution of Veterans vs Non-Veterans",
+       x = "Veteran Status",
+       y = "Total Count") +
+  theme_minimal(base_size = 12) +
+  theme(panel.grid.major.x = element_blank())
+
+```
+
+
+
+```{r}
+#| label: fig-log-reg
+#| fig-height: 7
+#| fig-width: 10
+
+# Prepare data
+model_data <- brfss %>%
+  filter(!is.na(veteran)) %>%
+  mutate(
+    veteran_bin = as.integer(veteran == "Yes"),
+    across(where(is.character), as.factor)
+  ) %>%
+  select(-veteran, -state, -adults) %>% 
+  na.omit()
+
+# Fit model
+log_model <- glm(veteran_bin ~ ., data = model_data, family = binomial)
+
+# Extract and format coefficients
+coef_df <- as.data.frame(summary(log_model)$coefficients) %>%
+  mutate(term = rownames(.)) %>%
+  rename(estimate = Estimate, std_error = `Std. Error`, p_value = `Pr(>|z|)`) %>%
+  filter(term != "(Intercept)") %>%
+  mutate(
+    odds_ratio = exp(estimate),
+    ci_low  = exp(estimate - 1.96 * std_error),
+    ci_high = exp(estimate + 1.96 * std_error),
+    significant = p_value < 0.05
+  ) %>%
+  arrange(desc(abs(estimate))) %>%
+  slice_head(n = 20)
+
+# Plot using the custom color scheme
+ggplot(coef_df, aes(x = odds_ratio, y = reorder(term, odds_ratio), color = significant)) +
+  geom_point(size = 3) +
+  geom_errorbarh(aes(xmin = ci_low, xmax = ci_high), height = 0.3) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "gray40") +
+  scale_color_manual(values = c("FALSE" = "gray70", "TRUE" = vet_blue),
+                     labels = c("Not significant", "p < 0.05")) +
+  labs(
+    title = "Top 20 Predictors of Veteran Status",
+    subtitle = "Odds ratios calculated via logistic regression",
+    x = "Odds Ratio (95% CI)",
+    y = NULL,
+    color = "Significance"
+  ) +
+  theme_minimal()
+```
+
+
+```{r}
+#| label: fig-demographics
+#| fig-height: 10
+#| fig-width: 12
+#| label: fig-vet-gender
+#| fig-cap: "Gender distribution among surveyed veterans."
+
+ggplot(vets, aes(x = sex)) +
+  geom_bar(fill = "#29b9d6", width = 0.5) +
+  geom_text(stat = "count", aes(label = scales::comma(after_stat(count))), 
+            vjust = -0.5, size = 3.5, fontface = "bold") +
+  labs(title = "Veteran Population by Gender", x = NULL, y = "Count") +
+  theme_minimal()
+```
+
+
+
+
+```{r}
+#| label: fig-vet-age
+#| fig-cap: "Age distribution of veterans, showing a heavy skew toward older demographics."
+
+#| label: fig-vet-race
+#| fig-cap: "Racial demographics of veterans within the dataset."
+
+ggplot(vets, aes(y = reorder(race, race, function(x) length(x)))) +
+  geom_bar(fill = "#2a79d5") +
+  geom_text(stat = "count", aes(label = scales::comma(after_stat(count))), 
+            hjust = -0.1, size = 3) +
+  scale_x_continuous(expand = expansion(mult = c(0, 0.2))) +
+  labs(title = "Veteran Population by Race", x = "Count", y = NULL) +
+  theme_minimal()
+
+```
+
+```{r}
+#| label: fig-education-comparison
+#| fig-cap: "Education level distribution by veteran status."
+
+brfss %>%
+  filter(!is.na(veteran), !is.na(education)) %>%
+  count(veteran, education) %>%
+  group_by(veteran) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  ggplot(aes(x = education, y = prop, fill = veteran)) +
+  geom_col(position = "dodge", width = 0.7) +
+  geom_text(
+    aes(label = scales::percent(prop, accuracy = 0.1)),
+    position = position_dodge(width = 0.7),
+    vjust = -0.3,
+    size = 3
+  ) +
+  scale_y_continuous(
+    labels = scales::percent,
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 12)) +
+  scale_fill_manual(values = c("No" = vet_teal, "Yes" = vet_blue)) +
+  labs(
+    title = "Education Distribution by Veteran Status",
+    x = "Education Level",
+    y = "Percent Within Group",
+    fill = "Veteran"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+
+
+
+
+
+```{r}
+#| label: fig-income-comparison
+#| fig-cap: "Income level distribution by veteran status."
+
+brfss %>%
+  filter(!is.na(veteran), !is.na(income)) %>%
+  count(veteran, income) %>%
+  group_by(veteran) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  ggplot(aes(x = income, y = prop, fill = veteran)) +
+  geom_col(position = "dodge", width = 0.7) +
+  geom_text(
+    aes(label = scales::percent(prop, accuracy = 0.1)),
+    position = position_dodge(width = 0.7),
+    vjust = -0.3,
+    size = 3
+  ) +
+  scale_y_continuous(
+    labels = scales::percent,
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 12)) +
+  scale_fill_manual(values = c("No" = vet_teal, "Yes" = vet_blue)) +
+  labs(
+    title = "Income Distribution by Veteran Status",
+    x = "Income Level",
+    y = "Percent Within Group",
+    fill = "Veteran"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+
+
+```{r}
+#| label: fig-age-comparison
+#| fig-cap: "Age distribution by veteran status."
+
+brfss %>%
+  filter(!is.na(veteran), !is.na(age)) %>%
+  count(veteran, age) %>%
+  group_by(veteran) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>%
+  ggplot(aes(x = age, y = prop, fill = veteran)) +
+  geom_col(position = "dodge", width = 0.7) +
+  geom_text(
+    aes(label = scales::percent(prop, accuracy = 0.1)),
+    position = position_dodge(width = 0.7),
+    vjust = -0.3,
+    size = 3
+  ) +
+  scale_y_continuous(
+    labels = scales::percent,
+    expand = expansion(mult = c(0, 0.15))
+  ) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 12)) +
+  scale_fill_manual(values = c("No" = vet_teal, "Yes" = vet_blue)) +
+  labs(
+    title = "Age Distribution by Veteran Status",
+    x = "Age Group",
+    y = "Percent Within Group",
+    fill = "Veteran"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 35, hjust = 1))
+```
+
+
+
+
+
+
+
+
+
