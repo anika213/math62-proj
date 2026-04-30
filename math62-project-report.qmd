@@ -953,52 +953,64 @@ physical_tests
 # Summary of physical health tests
 # generated with help from gemini
 
-# Your vectors
+# --- Data ---
 labels_a <- c("Arthritis", "Heart Disease", "Cancer", "Diabetes", "COPD")
 prop_vet <- c(0.4356422, 0.1244373, 0.1789827, 0.1962027, 0.11969946)
 prop_nonVet <- c(0.3455287, 0.0543102, 0.1105903, 0.1340290, 0.07724301)
-
-# Combine into a matrix
 data_matrix_a <- rbind(prop_vet, prop_nonVet)
-
-# Assign column names to the matrix
 colnames(data_matrix_a) <- labels_a
 
-# Your vectors
-labels_b <- c("daysphyshlthnotgood")
+labels_b <- c("Days Phys. Health\nNot Good")
 mean_vet <- c(4.972634)
 mean_nonVet <- c(4.338173)
-
-# Combine into a matrix
 data_matrix_b <- rbind(mean_vet, mean_nonVet)
-
-# Assign column names to the matrix
 colnames(data_matrix_b) <- labels_b
 
-# Create the grouped barplot
-# Adjust margins so the long label fits (bottom, left, top, right)
-par(mar = c(12, 4, 4, 2) + 0.1)
-par(mfrow=c(1,2))
+chart_colors <- c("#2a79d5", "#29b9d6")
 
+# --- Layout Configuration ---
+par(mfrow = c(1, 2), mar = c(5, 4, 4, 2))
+
+# --- Plot 1: Chronic Conditions ---
+# Initialize the plot area without drawing bars yet to set up the grid
+bp1 <- barplot(data_matrix_a, beside = TRUE, col = NA, border = NA, 
+               main = "Chronic Health Conditions", ylab = "Proportion", 
+               ylim = c(0, 0.5), las = 1, cex.names = 0.7, font.main = 2)
+
+# Draw the grid lines FIRST
+grid(nx = NA, ny = NULL, col = "gray90", lty = "solid")
+
+# Overlay the bars ON TOP of the grid
 barplot(data_matrix_a, 
-        beside = TRUE,                   # This places the bars side-by-side
-        col = c("skyblue", "salmon"),    # Colors for the two groups
-        legend.text = c("Veteran", "Non-Veteran"),
-        args.legend = list(x = "topright", bty = "n"),
-        main = "Health Indicators: ",
-        ylab = "Value",
-        las = 1,                         # Rotates x-axis labels to be vertical
-        cex.names = 0.8)                 # Shrinks the label text slightly
+        beside = TRUE, 
+        col = chart_colors,
+        border = "white",
+        add = TRUE,          # This tells R to draw over the existing grid
+        las = 1, 
+        cex.names = 0.7,
+        xaxt = "n")          # Prevents double-drawing labels
+
+legend("topright", legend = c("Veteran", "Non-Veteran"), 
+       fill = chart_colors, bty = "n", cex = 0.7)
+
+# --- Plot 2: Quality of Life ---
+barplot(data_matrix_b, beside = TRUE, col = NA, border = NA, 
+        main = "Average Days Unwell", ylab = "Mean Days", 
+        ylim = c(0, 6), las = 1, cex.names = 0.7, font.main = 2)
+
+grid(nx = NA, ny = NULL, col = "gray90", lty = "solid")
 
 barplot(data_matrix_b, 
-        beside = TRUE,                   # This places the bars side-by-side
-        col = c("skyblue", "salmon"),    # Colors for the two groups
-        legend.text = c("Veteran", "Non-Veteran"),
-        args.legend = list(x = "topright", bty = "n"),
-        main = "Veterans vs Non-Veterans",
-        ylab = "Value",
-        las = 1,                         # Rotates x-axis labels to be vertical
-        cex.names = 0.8)                 # Shrinks the label text slightly
+        beside = TRUE, 
+        col = chart_colors,
+        border = "white",
+        add = TRUE, 
+        las = 2, 
+        cex.names = 0.7,
+        xaxt = "n")
+
+# Reset
+par(mfrow = c(1, 1))
 ```
 
 Comparisons of mental health between veterans and non-veterans:
@@ -1077,52 +1089,142 @@ mental_tests
 # Summary of Mental Health Tests
 # generated with help from gemini
 
-# Your vectors
 labels_a <- c("Depression")
+
 prop_vet <- c(0.1757344)
 prop_nonVet <- c(0.2166535)
 
-# Combine into a matrix
 data_matrix_a <- rbind(prop_vet, prop_nonVet)
-
-# Assign column names to the matrix
 colnames(data_matrix_a) <- labels_a
 
-# Your vectors
-labels_b <- c("daysmenthlthnotgood")
+
+labels_b <- c("Days Mental Health\nNot Good")
+
 mean_vet <- c(3.517690)
 mean_nonVet <- c(4.462462)
 
-# Combine into a matrix
 data_matrix_b <- rbind(mean_vet, mean_nonVet)
-
-# Assign column names to the matrix
 colnames(data_matrix_b) <- labels_b
 
-# Create the grouped barplot
-# Adjust margins so the long label fits (bottom, left, top, right)
-par(mar = c(12, 4, 4, 2) + 0.1)
-par(mfrow=c(1,2))
 
-barplot(data_matrix_a, 
-        beside = TRUE,                   # This places the bars side-by-side
-        col = c("skyblue", "salmon"),    # Colors for the two groups
-        legend.text = c("Veteran", "Non-Veteran"),
-        args.legend = list(x = "topright", bty = "n"),
-        main = "Health Indicators: ",
-        ylab = "Value",
-        las = 1,                         # Rotates x-axis labels to be vertical
-        cex.names = 0.8)                 # Shrinks the label text slightly
+chart_colors <- c("#2a79d5", "#29b9d6")
 
-barplot(data_matrix_b, 
-        beside = TRUE,                   # This places the bars side-by-side
-        col = c("skyblue", "salmon"),    # Colors for the two groups
-        legend.text = c("Veteran", "Non-Veteran"),
-        args.legend = list(x = "topright", bty = "n"),
-        main = "Veterans vs Non-Veterans",
-        ylab = "Value",
-        las = 1,                         # Rotates x-axis labels to be vertical
-        cex.names = 0.8)                 # Shrinks the label text slightly
+if (!is.null(dev.list())) dev.off()
+
+par(mfrow = c(1, 2), mar = c(7, 5, 4, 2))
+
+
+# depression
+
+bp1 <- barplot(
+  data_matrix_a,
+  beside = TRUE,
+  col = NA,
+  border = NA,
+  main = "Depression",
+  ylab = "Proportion",
+  ylim = c(0, 0.25),
+  xaxt = "n",
+  yaxt = "n"
+)
+
+grid(
+  nx = NA,
+  ny = NULL,
+  col = "gray90",
+  lty = "solid"
+)
+
+barplot(
+  data_matrix_a,
+  beside = TRUE,
+  col = chart_colors,
+  border = "white",
+  add = TRUE,
+  xaxt = "n",
+  yaxt = "n"
+)
+
+axis(
+  side = 2,
+  at = seq(0, 0.25, by = 0.05),
+  labels = paste0(seq(0, 25, by = 5), "%"),
+  las = 1
+)
+
+axis(
+  side = 1,
+  at = colMeans(bp1),
+  labels = labels_a,
+  las = 1,
+  cex.axis = 0.8,
+  tick = FALSE
+)
+
+legend(
+  "bottom",
+  inset = c(0, -0.28),
+  legend = c("Veteran", "Non-Veteran"),
+  fill = chart_colors,
+  bty = "n",
+  cex = 0.7,
+  horiz = TRUE,
+  xpd = TRUE
+)
+
+# mental health days
+
+bp2 <- barplot(
+  data_matrix_b,
+  beside = TRUE,
+  col = NA,
+  border = NA,
+  main = "Average Days Mentally Unwell",
+  ylab = "Mean Days",
+  ylim = c(0, 5),
+  xaxt = "n",
+  yaxt = "n"
+)
+
+grid(
+  nx = NA,
+  ny = NULL,
+  col = "gray90",
+  lty = "solid"
+)
+
+barplot(
+  data_matrix_b,
+  beside = TRUE,
+  col = chart_colors,
+  border = "white",
+  add = TRUE,
+  xaxt = "n",
+  yaxt = "n"
+)
+
+axis(
+  side = 2,
+  at = seq(0, 5, by = 1),
+  labels = seq(0, 5, by = 1),
+  las = 1
+)
+
+axis(
+  side = 1,
+  at = colMeans(bp2),
+  labels = labels_b,
+  las = 1,
+  cex.axis = 0.8,
+  tick = FALSE
+)
+
+
+# -----------------------------
+# Reset layout
+# -----------------------------
+
+par(mfrow = c(1, 1))
 ```
 
 What is the difference in the probability of having a specific health factor being a veteran vs. non-veteran?
